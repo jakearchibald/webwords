@@ -18,3 +18,41 @@ import fs from 'fs';
 
 import {h} from 'preact';
 import render from 'preact-render-to-string';
+
+import promisify from './promisify';
+import indexTemplate from './templates/index';
+import App from './shared/components/app';
+import {escapeJSONString} from './utils';
+
+const readFile = promisify(fs, 'readFile');
+
+function getInitialState(req) {
+  const initialState = {
+    user: null
+  };
+
+  if (req.user) {
+    initialState.user = {
+      twitterHandle: req.user.twitterHandle,
+      name: req.user.name,
+      avatarUrl: req.user.avatarUrl
+    };
+  }
+
+  return initialState;
+}
+
+export async function home(req, res) {
+  const initialState = getInitialState(req);
+
+  res.send(
+    indexTemplate({
+      content: render(<App initialState={initialState} server={true}/>),
+      title: 'Web Words',
+      inlineCss: await readFile(`${__dirname}/static/css/index-inline.css`),
+      scripts: ['/static/js/main.js'],
+      lazyCss: ['/static/css/index.css'],
+      initialState: escapeJSONString(JSON.stringify(initialState))
+    })
+  );
+}

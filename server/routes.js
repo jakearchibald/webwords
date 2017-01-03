@@ -14,24 +14,12 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import {h} from 'preact';
+import express from 'express';
+import {home} from './views';
 
-import BoundComponent from './bound-component';
-import NewGame from './new-game';
-import Status from './status';
+export const routes = express.Router({
+  caseSensitive: true,
+  strict: true
+});
 
-export default class App extends BoundComponent {
-  constructor(props) {
-    super(props);
-    this.state = props.initialState || {};
-  }
-  render({server}, {user}) {
-    return (
-      <div>
-        <Status user={user}/>
-        <h1>Web Words</h1>
-        <NewGame loggedIn={!!user}/>
-      </div>
-    );
-  }
-}
+routes.get('/', home);

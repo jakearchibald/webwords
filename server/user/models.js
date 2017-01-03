@@ -14,24 +14,13 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import {h} from 'preact';
+import mongoose from '../mongoose-db';
 
-import BoundComponent from './bound-component';
-import NewGame from './new-game';
-import Status from './status';
+const userSchema = mongoose.Schema({
+  twitterId: {type: Number, unique: true, required: true, index: true},
+  twitterHandle: {type: String},
+  name: {type: String, required: true},
+  avatarUrl: String
+});
 
-export default class App extends BoundComponent {
-  constructor(props) {
-    super(props);
-    this.state = props.initialState || {};
-  }
-  render({server}, {user}) {
-    return (
-      <div>
-        <Status user={user}/>
-        <h1>Web Words</h1>
-        <NewGame loggedIn={!!user}/>
-      </div>
-    );
-  }
-}
+export const User = mongoose.model('User', userSchema);

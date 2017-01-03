@@ -14,24 +14,14 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import {h} from 'preact';
+import {User} from './models';
 
-import BoundComponent from './bound-component';
-import NewGame from './new-game';
-import Status from './status';
+export async function user(req, res, next) {
+  if (!req.session.twitterId) {
+    next();
+    return;
+  }
 
-export default class App extends BoundComponent {
-  constructor(props) {
-    super(props);
-    this.state = props.initialState || {};
-  }
-  render({server}, {user}) {
-    return (
-      <div>
-        <Status user={user}/>
-        <h1>Web Words</h1>
-        <NewGame loggedIn={!!user}/>
-      </div>
-    );
-  }
+  req.user = await User.findOne({twitterId: req.session.twitterId});
+  next();
 }

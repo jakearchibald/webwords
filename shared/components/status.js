@@ -17,20 +17,26 @@
 import {h} from 'preact';
 
 import BoundComponent from './bound-component';
-import NewGame from './new-game';
-import Status from './status';
 
-export default class App extends BoundComponent {
+export default class Status extends BoundComponent {
   constructor(props) {
     super(props);
-    this.state = props.initialState || {};
   }
-  render({server}, {user}) {
+  render({user}, {}) {
     return (
       <div>
-        <Status user={user}/>
-        <h1>Web Words</h1>
-        <NewGame loggedIn={!!user}/>
+        {user ?
+          <div>
+            <img
+              src={`${user.avatarUrl}_normal.jpg`}
+              alt=""
+              srcset={`${user.avatarUrl}_bigger.jpg 1.5x`}
+            />
+            {user.name}
+          </div>
+          :
+          <div>Not logged in</div>
+        }
       </div>
     );
   }

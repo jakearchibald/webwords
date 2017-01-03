@@ -28,7 +28,9 @@ const MongoStore = connectMongo(session);
 import {cookieSecret} from './settings'; 
 import {production} from './utils';
 
-import {userRoutes} from './user/routes';
+import {routes as homeRoutes} from './routes';
+import {routes as userRoutes} from './user/routes';
+import {user as userMiddleware} from './user/middleware';
 
 const app = express();
 const router = express.Router({
@@ -66,7 +68,7 @@ router.use(session({
   })
 }));
 
-//router.use(userMiddleware);
+router.use(userMiddleware);
 router.use(bodyParser.json());
 router.use(bodyParser.urlencoded({
   extended: true
@@ -74,6 +76,7 @@ router.use(bodyParser.urlencoded({
 router.use(multer().none());
 
 // Routes:
+router.use('/', homeRoutes);
 router.use('/user', userRoutes);
 
 app.use(router);

@@ -42,22 +42,13 @@ function loadStyle(url) {
   });
 }
 
-async function getInitialState() {
-  if (self.initialState) return self.initialState;
-
-  const response = await fetch('/initial-state.json', {
-    credentials: 'include'
-  });
-
-  return response.json();
-}
-
 const loadings = []; 
 
 //if (!window.fetch) loadings.push(loadScript('/static/js/polyfills.js'));
 loadings.push(loadStyle('/static/css/index.css'));
 
-Promise.all(loadings).then(() => getInitialState()).then(state => {
+Promise.all(loadings).then(state => {
+  console.log('Hello from your JS!');
   //const main = document.querySelector('.main-content');
   //main.innerHTML = '';
   //render(<App initialState={state}/>, main);

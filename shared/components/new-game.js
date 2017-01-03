@@ -17,20 +17,20 @@
 import {h} from 'preact';
 
 import BoundComponent from './bound-component';
-import NewGame from './new-game';
-import Status from './status';
 
-export default class App extends BoundComponent {
+export default class NewGame extends BoundComponent {
   constructor(props) {
     super(props);
-    this.state = props.initialState || {};
   }
-  render({server}, {user}) {
+  render({loggedIn}, {}) {
     return (
       <div>
-        <Status user={user}/>
-        <h1>Web Words</h1>
-        <NewGame loggedIn={!!user}/>
+        {loggedIn ?
+          <div>TODO: new game</div>
+          :
+          <div><a href="/user/login">Log in</a></div>
+        }
+        <div>TODO: new local game</div>
       </div>
     );
   }

@@ -36,6 +36,8 @@
     "mongoose": "^4.7.4",
     "multer": "^1.2.1",
     "preact": "^7.1.0",
+    "preact-render-to-string": "^3.3.0",
+    "request": "^2.79.0",
     "respawn": "^2.4.1",
     "rollup-plugin-babel": "^2.7.1",
     "rollup-plugin-commonjs": "^6.0.0",
