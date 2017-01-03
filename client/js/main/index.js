@@ -16,6 +16,7 @@
 */
 import {h, render} from 'preact';
 import regeneratorRuntime from 'regenerator-runtime/runtime';
+import App from '../../../shared/components/app';
 // for node compatibility
 self.global = self;
 // so we don't have to keep importing it
@@ -47,9 +48,9 @@ const loadings = [];
 //if (!window.fetch) loadings.push(loadScript('/static/js/polyfills.js'));
 loadings.push(loadStyle('/static/css/index.css'));
 
-Promise.all(loadings).then(state => {
-  console.log('Hello from your JS!');
-  //const main = document.querySelector('.main-content');
-  //main.innerHTML = '';
-  //render(<App initialState={state}/>, main);
+Promise.all(loadings).then(() => {
+  const initialState = window.initialState;
+  const main = document.querySelector('.main-content');
+  const root = document.querySelector('.main-content > *');
+  render(<App initialState={initialState}/>, main, root);
 });

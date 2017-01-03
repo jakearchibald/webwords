@@ -22,15 +22,22 @@ export default class NewGame extends BoundComponent {
   constructor(props) {
     super(props);
   }
-  render({loggedIn}, {}) {
+  render({loggedIn, server}, {}) {
     return (
       <div>
         {loggedIn ?
-          <div>TODO: new game</div>
+          server ?
+            <div>Loading</div>
+            :
+            <div>TODO: new game</div>
           :
           <div><a href="/user/login">Log in</a></div>
         }
-        <div>TODO: new local game</div>
+        {server ?
+          <div>Loading</div>
+          :
+          <div>TODO: new local game</div>
+        }
       </div>
     );
   }

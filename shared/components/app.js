@@ -30,7 +30,7 @@ export default class App extends BoundComponent {
       <div>
         <Status user={user}/>
         <h1>Web Words</h1>
-        <NewGame loggedIn={!!user}/>
+        <NewGame loggedIn={!!user} server={server}/>
       </div>
     );
   }
