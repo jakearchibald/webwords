@@ -46,7 +46,9 @@ function loadStyle(url) {
 const loadings = []; 
 
 //if (!window.fetch) loadings.push(loadScript('/static/js/polyfills.js'));
-loadings.push(loadStyle('/static/css/index.css'));
+Array.from(document.querySelectorAll('.lazy-css')).forEach(link => {
+  loadings.push(loadStyle(link.href));
+});
 
 Promise.all(loadings).then(() => {
   const initialState = window.initialState;

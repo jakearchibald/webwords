@@ -21,7 +21,7 @@ limitations under the License.
     <link rel="stylesheet" href="{{.}}">
   {{/each}}
   {{#each lazyCss}}
-    <link rel="preload" as="style" href="{{.}}">
+    <link class="lazy-css" rel="preload" as="style" href="{{.}}">
   {{/each}}
   {{#if inlineCss}}
     <style>{{{inlineCss}}}</style>
