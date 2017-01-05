@@ -43,6 +43,10 @@ const paths = {
     src: 'server/**/*.js',
     dest: 'build/'
   },
+  testScripts: {
+    src: 'test/**/*.js',
+    dest: 'build/test'
+  },
   serverTemplates: {
     src: 'server/templates/**/*.hbs',
     dest: 'build/templates'
@@ -115,6 +119,18 @@ function serverScripts() {
     }))
     .pipe(sourcemaps.write('.'))
     .pipe(gulp.dest(paths.serverScripts.dest));
+}
+
+function testScripts() {
+  return gulp.src(paths.testScripts.src, {
+    since: gulp.lastRun(testScripts)
+  }).pipe(sourcemaps.init())
+    .pipe(babel({
+      presets: ['es2017'],
+      plugins: ["transform-es2015-modules-commonjs", ["transform-react-jsx", { "pragma":"h" }]]
+    }))
+    .pipe(sourcemaps.write('.'))
+    .pipe(gulp.dest(paths.testScripts.dest));
 }
 
 function sharedScripts() {
@@ -261,6 +277,7 @@ function watch() {
 
   // server
   gulp.watch(paths.serverScripts.src, gulp.series(serverScripts, serverRestart));
+  gulp.watch(paths.testScripts.src, testScripts);
   gulp.watch(paths.serverTemplates.src, gulp.series(serverTemplates, serverRestart));
   gulp.watch(paths.sharedScripts.src, gulp.series(sharedScripts, gulp.parallel(...browserScriptTasks), serverRestart));
 
@@ -278,7 +295,7 @@ gulp.task('browserScripts', gulp.parallel(...browserScripts.map(i => i.task)));
 
 const mainBuild = gulp.series(
   clean,
-  gulp.parallel(serverScripts, serverTemplates, sharedScripts, copy, scss, 'browserScripts')
+  gulp.parallel(serverScripts, testScripts, serverTemplates, sharedScripts, copy, scss, 'browserScripts')
 );
 
 gulp.task('build', gulp.series(

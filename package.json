@@ -4,7 +4,9 @@
   "main": "server-build/index.js",
   "scripts": {
     "install-mongo": "docker pull mongo && docker create --name webwords-mongo -p 27017:27017 mongo",
-    "serve": "gulp serve"
+    "serve": "gulp serve",
+    "test": "mocha build/test",
+    "test-debug": "mocha --debug-brk --inspect build/test"
   },
   "repository": "git@github.com:jakearchibald/webwords.git",
   "author": "Jake Archibald <jaffathecake@gmail.com>",
@@ -33,6 +35,7 @@
     "gulp-sourcemaps": "^1.9.1",
     "gulp-uglify": "^2.0.0",
     "gulp-util": "^3.0.7",
+    "mocha": "^3.2.0",
     "mongoose": "^4.7.4",
     "multer": "^1.2.1",
     "preact": "^7.1.0",
@@ -43,6 +46,7 @@
     "rollup-plugin-commonjs": "^6.0.0",
     "rollup-plugin-node-resolve": "^2.0.0",
     "rollup-stream": "^1.14.0",
+    "should": "^11.1.2",
     "vinyl-buffer": "^1.0.0",
     "vinyl-source-stream": "^1.1.0"
   }
