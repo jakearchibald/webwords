@@ -197,6 +197,12 @@ describe('Board', function() {
       move.placeTile('a', 6, 7);
       move.placeTile('a', 4, 7);
       emptyBoard.validatePlacement(move).should.be.false();
+
+      move = new Move();
+      move.placeTile('a', 8, 8);
+      move.placeTile('a', 8, 9);
+      move.placeTile('a', 8, 10);
+      emptyBoard.validatePlacement(move).should.be.false();
     });
 
     it(`rejects moves that aren't ajacent to an existing tile`, function() {
@@ -312,7 +318,7 @@ describe('Board', function() {
     });
 
     it(`allows moves that touch tiles above once`, function() {
-      const board = new Board();
+      const board = createDemoBoard();
       let move = new Move();
       move.placeTile('a', 10, 13);
       move.placeTile('a', 10, 12);
@@ -320,7 +326,7 @@ describe('Board', function() {
     });
 
     it(`allows moves that touch tiles above many`, function() {
-      const board = new Board();
+      const board = createDemoBoard();
       let move = new Move();
       move.placeTile('a', 6, 12);
       move.placeTile('a', 7, 12);
@@ -332,7 +338,7 @@ describe('Board', function() {
     });
 
     it(`allows moves that touch tiles below once`, function() {
-      const board = new Board();
+      const board = createDemoBoard();
       let move = new Move();
       move.placeTile('a', 4, 6);
       move.placeTile('a', 4, 5);
@@ -340,7 +346,7 @@ describe('Board', function() {
     });
 
     it(`allows moves that touch tiles below many`, function() {
-      const board = new Board();
+      const board = createDemoBoard();
       let move = new Move();
       move.placeTile('a', 3, 6);
       move.placeTile('a', 4, 6);
@@ -350,7 +356,7 @@ describe('Board', function() {
     });
 
     it(`allows moves that touch tiles to the left once`, function() {
-      const board = new Board();
+      const board = createDemoBoard();
       let move = new Move();
       move.placeTile('a', 11, 10);
       move.placeTile('a', 11, 11);
@@ -359,7 +365,7 @@ describe('Board', function() {
     });
 
     it(`allows moves that touch tiles to the left many`, function() {
-      const board = new Board();
+      const board = createDemoBoard();
       let move = new Move();
       move.placeTile('a', 8, 8);
       move.placeTile('a', 8, 9);
@@ -368,7 +374,7 @@ describe('Board', function() {
     });
 
     it(`allows moves that touch tiles to the right once`, function() {
-      const board = new Board();
+      const board = createDemoBoard();
       let move = new Move();
       move.placeTile('a', 4, 9);
       move.placeTile('a', 5, 9);
@@ -377,7 +383,7 @@ describe('Board', function() {
     });
 
     it(`allows moves that touch tiles to the right many`, function() {
-      const board = new Board();
+      const board = createDemoBoard();
       let move = new Move();
       move.placeTile('a', 6, 9);
       move.placeTile('a', 6, 10);
@@ -387,14 +393,14 @@ describe('Board', function() {
     });
 
     it(`allows moves that touch tiles on multiple axis`, function() {
-      const board = new Board();
+      const board = createDemoBoard();
       let move = new Move();
       move.placeTile('a', 8, 8);
       board.validatePlacement(move).should.be.true();
     });
 
     it(`allows moves either side of an existing tile`, function() {
-      const board = new Board();
+      const board = createDemoBoard();
       let move = new Move();
       move.placeTile('a', 6, 9);
       move.placeTile('a', 8, 9);
