@@ -14,17 +14,17 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import Placement from './placement';
+const tileScores = {
+  a: 1, b: 3, c: 3, d: 2, e: 1, f: 4, g: 2,
+  h: 4, i: 1, j: 8, k: 5, l: 1, m: 3, n: 1,
+  o: 1, p: 3, q: 10,r: 1, s: 1, t: 1, u: 1,
+  v: 4, w: 4, x: 8, y: 4, z: 10
+};
 
-export default class Move {
-  constructor() {
-    this.placements = [];
-  }
-  add(tile, x, y) {
-    this.placements.push(new Placement(tile, x, y));
-  }
-  getTile(x, y) {
-    const placement = this.placements.find(p => p.x == x && p.y == y);
-    return placement && placement.tile;
+export default class Tile {
+  constructor(letter, isJoker = false) {
+    this.letter = letter;
+    this.isJoker = isJoker;
+    this.score = isJoker ? 0 : tileScores[letter];
   }
 }

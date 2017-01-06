@@ -14,9 +14,30 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-export default class Tile {
-  constructor(letter, isJoker = false) {
-    this.letter = letter;
-    this.isJoker = isJoker;
+import Placement from './placement';
+
+export default class Move {
+  constructor() {
+    /**
+     * @type {Array<Placement>}
+     */
+    this.placements = [];
+  }
+  /**
+   * @param {Tile} tile
+   * @param {number} x
+   * @param {number} y
+   */
+  add(tile, x, y) {
+    this.placements.push(new Placement(tile, x, y));
+  }
+  /**
+   * @param {number} x
+   * @param {number} y
+   * @returns {Tile}
+   */
+  getTile(x, y) {
+    const placement = this.placements.find(p => p.x == x && p.y == y);
+    return placement && placement.tile;
   }
 }

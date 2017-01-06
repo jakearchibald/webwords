@@ -1,11 +1,11 @@
 /* eslint-env mocha */
 import 'source-map-support/register';
 import should from 'should';
-import Board from '../shared/board';
-import Move from '../shared/board/move';
-import Tile from '../shared/board/tile';
-import Word from '../shared/board/word';
-import Placement from '../shared/board/placement';
+import Board from '../shared/game/board';
+import Move from '../shared/game/move';
+import Tile from '../shared/game/tile';
+import Word from '../shared/game/word';
+import Placement from '../shared/game/placement';
 
 function createBoard(ascii) {
   const board = new Board();
@@ -59,6 +59,32 @@ describe('Tile', function() {
     const jokerTile = new Tile('q', true);
     jokerTile.letter.should.equal('q');
     jokerTile.isJoker.should.be.true();
+  });
+
+  it('has the correct score', function() {
+    let tile = new Tile('a');
+    tile.score.should.equal(1);
+
+    tile = new Tile('q');
+    tile.score.should.equal(10);
+
+    for (const letter of 'abcdefghijklmnopqrstuvwxyz') {
+      let tile = new Tile(letter);
+      tile.score.should.be.above(0);
+    }
+  });
+
+  it('jokers have no score', function() {
+    for (const letter of 'abcdefghijklmnopqrstuvwxyz') {
+      let tile = new Tile(letter, true);
+      tile.score.should.be.equal(0);
+    }
+  });
+
+  it(`jokers don't require a letter`, function() {
+    let tile = new Tile('', true);
+    tile.score.should.be.equal(0);
+    tile.letter.should.be.equal('');
   });
 });
 
@@ -434,7 +460,7 @@ describe('Board', function() {
     });
   });
 
-  describe('#getWordsPlayed', function() {
+  describe('#getWordsForMove', function() {
     const board = createDemoBoard();
     let move = new Move();
     move.add(new Tile('z'), 6, 6);
@@ -446,11 +472,11 @@ describe('Board', function() {
     move.add(new Tile('f'), 6, 13);
 
     it('exists', function() {
-      board.getWordsPlayed.should.be.a.Function();
+      board.getWordsForMove.should.be.a.Function();
     });
 
     it('returns arrays of Words', function() {
-      const words = board.getWordsPlayed(move);
+      const words = board.getWordsForMove(move);
       words.should.be.an.Array();
       for (const word of words) {
         word.should.be.an.instanceOf(Word);
@@ -463,11 +489,93 @@ describe('Board', function() {
 
     it('finds the correct words', function() {
       const expectedWords = ['zlabcdef', 'ao', 'bv', 'ce', 'dsale'].sort();
-      const foundWords = board.getWordsPlayed(move)
+      const foundWords = board.getWordsForMove(move)
         .map(word => word.toString())
         .sort();
       
       foundWords.should.be.eql(expectedWords);
     });
+  });
+
+  describe('#getActionTiles', function() {
+    it('works', function() {
+      const board = new Board();
+      const actionTiles = board.getActionTiles();
+
+      actionTiles.length.should.be.above(0);
+      
+      for (const actionTile of actionTiles) {
+        actionTile.x.should.be.a.Number();
+        actionTile.y.should.be.a.Number();
+        actionTile.type.should.be.a.String();
+      }
+    });
+  });
+
+  describe('#getActionTile', function() {
+    it('reflects #getActionTiles()', function() {
+      const board = new Board();
+      const actionTiles = board.getActionTiles();
+      
+      for (const actionTile of actionTiles) {
+        board.getActionTile(actionTile.x, actionTile.y).should.be.equal(actionTile.type);
+      }
+
+      should(board.getActionTile(1, 0)).be.undefined();
+    });
+  });
+
+  describe('#getScoreForWords', function() {
+    const board = createDemoBoard();
+
+    it('gets scores from multiple words & existing letters', function() {
+      const move = new Move();
+      move.add(new Tile('z'), 6, 6);
+      move.add(new Tile('a'), 6, 8);
+      move.add(new Tile('b'), 6, 9);
+      move.add(new Tile('c'), 6, 10);
+      move.add(new Tile('d'), 6, 11);
+      move.add(new Tile('e'), 6, 12);
+      move.add(new Tile('f'), 6, 13);
+      const words = board.getWordsForMove(move);
+
+      // ['zlabcdef', 'ao', 'bv', 'ce', 'dsale']
+      const expectedScore = 0
+        + (10 * 2) // z + dl
+        + 1        // l
+        + (1 * 2)  // a + dl
+        + 3        // b
+        + 3        // c
+        + 2        // d
+        + (1 * 2)  // e + dl
+        + 4        // f
+        // next word
+        + (1 * 2)  // a + dl
+        + 1        // o
+        // next word
+        + 3        // b
+        + 4        // v
+        // next word
+        + 3        // c
+        + 1        // e
+        // next word
+        + 2        // d
+        + 1        // s
+        + 1        // a
+        + 1        // l
+        + 1        // e
+        ;
+
+      board.getScoreForWords(words).should.equal(expectedScore);
+    });
+
+    it(`applies triple letters`);
+    it(`applies double words`);
+    it(`applies triple words`);
+    it(`triple words multiply correctly`);
+    it(`double words multiply correctly`);
+    it(`doesn't use action tiles for tiles already on the board`);
+    it(`doesn't assign a score to new joker tiles`);
+    it(`doesn't assign a score to existing joker tiles`);
   });
 });

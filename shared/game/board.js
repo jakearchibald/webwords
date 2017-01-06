@@ -19,27 +19,66 @@ import Word from './word';
 const BOARD_WIDTH = 15;
 const BOARD_HEIGHT = 15;
 
-const startSquare = {
-  // In the centre
-  x: (BOARD_WIDTH - 1) / 2,
-  y: (BOARD_HEIGHT - 1) / 2
-};
+// This defines 1/8th of the special squares, as the rest are mirrored
+const actionTiles = [
+  // tw: triple word
+  // dw: double word
+  // tl: triple letter
+  // dl: double letter
+  {x: 0, y: 0, type: 'tw'},
+  {x: 1, y: 1, type: 'dw'},
+  {x: 2, y: 2, type: 'dw'},
+  {x: 3, y: 3, type: 'dw'},
+  {x: 4, y: 4, type: 'dw'},
+  {x: 5, y: 5, type: 'tl'},
+  {x: 6, y: 6, type: 'dl'},
+  {x: 7, y: 7, type: '*'},
 
-function isOutOfBounds(x, y) {
-  return (
-    x < 0 || y < 0 ||
-    x >= BOARD_WIDTH ||
-    y >= BOARD_HEIGHT
-  );
+  {x: 3, y: 0, type: 'dl'},
+  {x: 7, y: 0, type: 'tw'},
+  {x: 5, y: 1, type: 'tl'},
+  {x: 6, y: 2, type: 'dl'},
+  {x: 7, y: 3, type: 'dl'}
+];
+
+// Mirror 8th
+for (const {x, y, type} of actionTiles.slice()) {
+  if (x == y) continue;
+  actionTiles.push({x: y, y: x, type});
+}
+// Mirror quarter
+for (const {x, y, type} of actionTiles.slice()) {
+  if (x == BOARD_WIDTH - 1 - x) continue;
+  actionTiles.push({x: BOARD_WIDTH - 1 - x, y, type});
+}
+// Mirror half
+for (const {x, y, type} of actionTiles.slice()) {
+  if (y == BOARD_HEIGHT - 1 - y) continue;
+  actionTiles.push({x, y: BOARD_HEIGHT - 1 - y, type});
+}
+
+// Index the special squares for easier lookup
+const actionTilesIndex = {};
+for (const {x, y, type} of actionTiles) {
+  actionTilesIndex[`${x}:${y}`] = type;
 }
 
 export default class Board {
   constructor() {
     this._hasTiles = false;
     this._tiles = {};
+    this.width = BOARD_WIDTH;
+    this.height = BOARD_HEIGHT;
+  }
+  inBounds(x, y) {
+    return (
+      x >= 0 && y >= 0 &&
+      x < this.width &&
+      y < this.height
+    );
   }
   placeTile(tile, x, y) {
-    if (isOutOfBounds(x, y)) throw Error('Invalid tile placement');
+    if (!this.inBounds(x, y)) throw Error('Invalid tile placement');
 
     this._tiles[`${x}:${y}`] = tile;
     this._hasTiles = true;
@@ -63,7 +102,7 @@ export default class Board {
       const placement = sortedPlacements[i];
 
       // Check for out-of-bounds
-      if (isOutOfBounds(placement.x, placement.y)) return false;
+      if (!this.inBounds(placement.x, placement.y)) return false;
 
       // Check for overlap with existing tile
       if (this.getTile(placement.x, placement.y)) {
@@ -124,10 +163,7 @@ export default class Board {
       else {
         // If this is the first move, it must cover the start square
         if (!startSquareCovered) {
-          startSquareCovered = (
-            placement.x == startSquare.x &&
-            placement.x == startSquare.y
-          );
+          startSquareCovered = this.getActionTile(placement.x, placement.y) == '*';
         }
       }
 
@@ -150,7 +186,7 @@ export default class Board {
 
     return true;
   }
-  getWordsPlayed(move) {
+  getWordsForMove(move) {
     const skipForHorizontal = {};
     const skipForVertical = {};
     const words = [];
@@ -206,5 +242,45 @@ export default class Board {
     }
 
     return words;
+  }
+  getActionTile(x, y) {
+    return actionTilesIndex[`${x}:${y}`];
+  }
+  getActionTiles() {
+    return actionTiles;
+  }
+  /**
+   * @param  {Array<Word>} words
+   * @returns {number}
+   */
+  getScoreForWords(words) {
+    let score = 0;
+
+    for (const word of words) {
+      let wordScore = 0;
+      let wordMultiplier = 1;
+
+      for (const placement of word.placements) {
+        // We only pay attention to action squares for tiles we're about to place.
+        // If there's a tile already there, it's effectively actionless.
+        const action = !this.getTile(placement.x, placement.y) ?
+          this.getActionTile(placement.x, placement.y) :
+          '';
+
+        let letterMultiplier = 1;
+
+        switch (action) {
+          case 'tw': wordMultiplier *= 3; break;
+          case 'dw': wordMultiplier *= 2; break;
+          case 'tl': letterMultiplier = 3; break;
+          case 'dl': letterMultiplier = 2; break;
+        }
+
+        wordScore += placement.tile.score * letterMultiplier;
+      }
+
+      score += wordScore * wordMultiplier;
+    }
+    return score;
   }
 }

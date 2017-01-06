@@ -14,10 +14,20 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
+import Tile from './tile';
+
 export default class Placement {
+  /**
+   * @param {Tile} tile
+   * @param {number} x
+   * @param {number} y
+   */
   constructor(tile, x, y) {
+    /** @type {Tile} */
     this.tile = tile;
+    /** @type {number} */
     this.x = x;
+    /** @type {number} */
     this.y = y;
   }
 }
