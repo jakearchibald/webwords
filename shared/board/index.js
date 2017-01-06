@@ -14,6 +14,8 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
+import Word from './word';
+
 const BOARD_WIDTH = 15;
 const BOARD_HEIGHT = 15;
 
@@ -23,31 +25,27 @@ const startSquare = {
   y: (BOARD_HEIGHT - 1) / 2
 };
 
+function isOutOfBounds(x, y) {
+  return (
+    x < 0 || y < 0 ||
+    x >= BOARD_WIDTH ||
+    y >= BOARD_HEIGHT
+  );
+}
+
 export default class Board {
   constructor() {
     this._hasTiles = false;
-    this._tiles = Array(BOARD_WIDTH * BOARD_HEIGHT);
+    this._tiles = {};
   }
-  placeTile(letter, x, y) {
-    const pos = BOARD_WIDTH * y + x;
+  placeTile(tile, x, y) {
+    if (isOutOfBounds(x, y)) throw Error('Invalid tile placement');
 
-    if (pos >= this._tiles.length || pos < 0) {
-      throw Error('Invalid tile placement');
-    }
-
-    this._tiles[pos] = letter;
+    this._tiles[`${x}:${y}`] = tile;
     this._hasTiles = true;
   }
   getTile(x, y) {
-    const outOfBounds = (
-      x < 0 || y < 0 ||
-      x >= BOARD_WIDTH ||
-      y >= BOARD_HEIGHT
-    );
-
-    if (outOfBounds) return undefined;
-
-    return this._tiles[BOARD_WIDTH * y + x];
+    return this._tiles[`${x}:${y}`];
   }
   validatePlacement(move) {
     // Must have placed a tile
@@ -65,13 +63,7 @@ export default class Board {
       const placement = sortedPlacements[i];
 
       // Check for out-of-bounds
-      const outOfBounds = (
-        placement.x < 0 || placement.y < 0 ||
-        placement.x >= BOARD_WIDTH ||
-        placement.y >= BOARD_HEIGHT
-      );
-
-      if (outOfBounds) return false;
+      if (isOutOfBounds(placement.x, placement.y)) return false;
 
       // Check for overlap with existing tile
       if (this.getTile(placement.x, placement.y)) {
@@ -158,10 +150,61 @@ export default class Board {
 
     return true;
   }
-  getWords(move) {
+  getWordsPlayed(move) {
+    const skipForHorizontal = {};
+    const skipForVertical = {};
+    const words = [];
 
-  }
-  calculateScore(move) {
+    const getTileFromBoardOrMove = (x, y) => this.getTile(x, y) || move.getTile(x, y);
 
+    for (const placement of move.placements) {
+      // Have we already caluclated horizontal for this square?
+      if (!skipForHorizontal[`${placement.x}:${placement.y}`]) {
+        // First, look for the start of a horizontal word.
+        // Go as far left as we can while there's a tile in the move or on the board.
+        let x = placement.x;
+        while (getTileFromBoardOrMove(x - 1, placement.y)) x--;
+        
+        // If there's a tile to the right, we've found a word.
+        if (getTileFromBoardOrMove(x + 1, placement.y)) {
+          const word = new Word();
+          words.push(word);
+          let tile;
+
+          // Keep going right while we have tiles.
+          while (tile = getTileFromBoardOrMove(x, placement.y)) { // eslint-disable-line no-cond-assign
+            word.add(tile, x, placement.y);
+            // We don't need to check this tile again.
+            skipForHorizontal[`${x}:${placement.y}`] = true;
+            x++;
+          }
+        }
+      }
+
+      // As above, but for the vertical
+      if (!skipForVertical[`${placement.x}:${placement.y}`]) {
+        // First, look for the start of a vertical word.
+        // Go as far up as we can while there's a tile in the move or on the board.
+        let y = placement.y;
+        while (getTileFromBoardOrMove(placement.x, y - 1)) y--;
+        
+        // If there's a tile below, we've found a word.
+        if (getTileFromBoardOrMove(placement.x, y + 1)) {
+          const word = new Word();
+          words.push(word);
+          let tile;
+
+          // Keep going down while we have tiles.
+          while (tile = getTileFromBoardOrMove(placement.x, y)) { // eslint-disable-line no-cond-assign
+            word.add(tile, placement.x, y);
+            // We don't need to check this tile again.
+            skipForVertical[`${placement.x}:${y}`] = true;
+            y++;
+          }
+        }
+      }
+    }
+
+    return words;
   }
 }

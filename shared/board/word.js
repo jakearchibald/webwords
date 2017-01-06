@@ -14,17 +14,10 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import Placement from './placement';
+import Move from './move';
 
-export default class Move {
-  constructor() {
-    this.placements = [];
-  }
-  add(tile, x, y) {
-    this.placements.push(new Placement(tile, x, y));
-  }
-  getTile(x, y) {
-    const placement = this.placements.find(p => p.x == x && p.y == y);
-    return placement && placement.tile;
+export default class Word extends Move {
+  toString() {
+    return this.placements.map(p => p.tile.letter).join('');
   }
 }
