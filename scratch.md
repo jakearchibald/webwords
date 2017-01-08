@@ -27,6 +27,7 @@ Naivgation could just be real? Yeah, real at first.
 # New remote game
 
 If a remote game is started, let the player make a move before telling them how to tell the other player.
+Also don't ask for notification permission until after the first move.
 
 # Storage
 
@@ -35,7 +36,8 @@ If a remote game is started, let the player make a move before telling them how 
   * Score
   * Letters - server only (unless this player)
   * twitter id
-* Is game active
+* Is local game?
+* Is game active?
 * Who resigned (if any)
 * Moves played
   * Placements (empty if skipped or swapped)

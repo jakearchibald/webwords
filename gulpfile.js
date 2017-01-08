@@ -36,6 +36,8 @@ const rollupBabel = require('rollup-plugin-babel');
 const nodeResolve = require('rollup-plugin-node-resolve');
 const commonjs = require('rollup-plugin-commonjs');
 
+const createIndexedDictionary = require('./create-indexed-dictionary');
+
 const production = process.env.NODE_ENV == 'production';
 
 const paths = {
@@ -54,6 +56,10 @@ const paths = {
   sharedScripts: {
     src: 'shared/**/*.js',
     dest: 'build/shared'
+  },
+  dictionary: {
+    src: 'shared/dictionary/**/*.txt',
+    dest: 'build/shared/dictionary'
   },
   scss: {
     src: 'client/css/**/*.scss',
@@ -143,6 +149,14 @@ function sharedScripts() {
     }))
     .pipe(sourcemaps.write('.'))
     .pipe(gulp.dest(paths.sharedScripts.dest));
+}
+
+function dictionary() {
+  return gulp.src(paths.dictionary.src, {
+    since: gulp.lastRun(dictionary),
+    buffer: false
+  }).pipe(createIndexedDictionary())
+    .pipe(gulp.dest(paths.dictionary.dest));
 }
 
 function serverTemplates() {
@@ -278,6 +292,7 @@ function watch() {
   // server
   gulp.watch(paths.serverScripts.src, gulp.series(serverScripts, serverRestart));
   gulp.watch(paths.testScripts.src, testScripts);
+  gulp.watch(paths.dictionary.src, dictionary);
   gulp.watch(paths.serverTemplates.src, gulp.series(serverTemplates, serverRestart));
   gulp.watch(paths.sharedScripts.src, gulp.series(sharedScripts, gulp.parallel(...browserScriptTasks), serverRestart));
 
@@ -295,7 +310,7 @@ gulp.task('browserScripts', gulp.parallel(...browserScripts.map(i => i.task)));
 
 const mainBuild = gulp.series(
   clean,
-  gulp.parallel(serverScripts, testScripts, serverTemplates, sharedScripts, copy, scss, 'browserScripts')
+  gulp.parallel(serverScripts, testScripts, serverTemplates, sharedScripts, dictionary, copy, scss, 'browserScripts')
 );
 
 gulp.task('build', gulp.series(
