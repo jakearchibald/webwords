@@ -15,6 +15,7 @@
 * limitations under the License.
 */
 import Word from './word';
+import Tile from './tile';
 
 const BOARD_WIDTH = 15;
 const BOARD_HEIGHT = 15;
@@ -83,6 +84,11 @@ export default class Board {
     this._tiles[`${x}:${y}`] = tile;
     this._hasTiles = true;
   }
+  /**
+   * @param {Number} x
+   * @param {Number} y
+   * @returns {Tile}
+   */
   getTile(x, y) {
     return this._tiles[`${x}:${y}`];
   }
@@ -263,9 +269,9 @@ export default class Board {
       for (const placement of word.placements) {
         // We only pay attention to action squares for tiles we're about to place.
         // If there's a tile already there, it's effectively actionless.
-        const action = !this.getTile(placement.x, placement.y) ?
-          this.getActionTile(placement.x, placement.y) :
-          '';
+        const action = this.getTile(placement.x, placement.y) ?
+          '' :
+          this.getActionTile(placement.x, placement.y);
 
         let letterMultiplier = 1;
 

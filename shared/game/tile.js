@@ -14,7 +14,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-const tileScores = {
+export const scores = {
   a: 1, b: 3, c: 3, d: 2, e: 1, f: 4, g: 2,
   h: 4, i: 1, j: 8, k: 5, l: 1, m: 3, n: 1,
   o: 1, p: 3, q: 10,r: 1, s: 1, t: 1, u: 1,
@@ -25,6 +25,6 @@ export default class Tile {
   constructor(letter, isJoker = false) {
     this.letter = letter;
     this.isJoker = isJoker;
-    this.score = isJoker ? 0 : tileScores[letter];
+    this.score = isJoker ? 0 : scores[letter];
   }
 }

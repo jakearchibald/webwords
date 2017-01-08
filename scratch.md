@@ -28,20 +28,17 @@ Naivgation could just be real? Yeah, real at first.
 
 If a remote game is started, let the player make a move before telling them how to tell the other player.
 
-# The game model
+# Storage
 
 * Remaining letter bag - server only
-* Player one letters - server only (unless this player)
-* Player two letters - server only (unless this player)
-* Player 1 score
-* Player 2 score
-* Start player
-* Board
-  * Locations of special squares (including start square)
-  * Size of board
-  * List of moves played
-    * Each move is a list of letter placements
-  * Validation methods
-* Validate move - awaiting move from player, using letters owned, plus board check
+* Players
+  * Score
+  * Letters - server only (unless this player)
+  * twitter id
+* Is game active
+* Who resigned (if any)
+* Moves played
+  * Placements (empty if skipped or swapped)
+  * Number of letters in bag remaining (so it can be tracked if there is a skip from each player)
 
-
+Store "friends" on client, which is anyone the user has started a game with.

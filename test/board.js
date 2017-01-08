@@ -4,6 +4,7 @@ import should from 'should';
 import Board from '../shared/game/board';
 import Move from '../shared/game/move';
 import Tile from '../shared/game/tile';
+import {scores as tileScores} from '../shared/game/tile';
 import Word from '../shared/game/word';
 import Placement from '../shared/game/placement';
 
@@ -541,41 +542,260 @@ describe('Board', function() {
 
       // ['zlabcdef', 'ao', 'bv', 'ce', 'dsale']
       const expectedScore = 0
-        + (10 * 2) // z + dl
-        + 1        // l
-        + (1 * 2)  // a + dl
-        + 3        // b
-        + 3        // c
-        + 2        // d
-        + (1 * 2)  // e + dl
-        + 4        // f
+        + tileScores['z'] * 2
+        + tileScores['l']
+        + tileScores['a'] * 2
+        + tileScores['b']
+        + tileScores['c']
+        + tileScores['d']
+        + tileScores['e'] * 2
+        + tileScores['f']
         // next word
-        + (1 * 2)  // a + dl
-        + 1        // o
+        + tileScores['a'] * 2
+        + tileScores['o']
         // next word
-        + 3        // b
-        + 4        // v
+        + tileScores['b']
+        + tileScores['v']
         // next word
-        + 3        // c
-        + 1        // e
+        + tileScores['c']
+        + tileScores['e']
         // next word
-        + 2        // d
-        + 1        // s
-        + 1        // a
-        + 1        // l
-        + 1        // e
-        ;
+        + tileScores['d']
+        + tileScores['s']
+        + tileScores['a']
+        + tileScores['l']
+        + tileScores['e']
+      ;
 
       board.getScoreForWords(words).should.equal(expectedScore);
     });
 
-    it(`applies triple letters`);
-    it(`applies double words`);
-    it(`applies triple words`);
-    it(`triple words multiply correctly`);
-    it(`double words multiply correctly`);
-    it(`doesn't use action tiles for tiles already on the board`);
-    it(`doesn't assign a score to new joker tiles`);
-    it(`doesn't assign a score to existing joker tiles`);
+    it(`applies triple letters`, function() {
+      const move = new Move();
+      move.add(new Tile('a'), 5, 8);
+      move.add(new Tile('b'), 5, 9);
+      const words = board.getWordsForMove(move);
+
+      const expectedScore = 0
+        + tileScores['e']
+        + tileScores['a']
+        + tileScores['b'] * 3
+      ;
+
+      board.getScoreForWords(words).should.equal(expectedScore);
+    });
+
+    it(`applies double words`, function() {
+      const move = new Move();
+      move.add(new Tile('s'), 11, 11);
+      move.add(new Tile('a'), 11, 12);
+      const words = board.getWordsForMove(move);
+
+      const expectedScore = 0
+        + (0
+          + tileScores['s']
+          + tileScores['a']
+          + tileScores['l']
+          + tileScores['e']
+          + tileScores['s']
+        ) * 2 // dw
+        +
+        (0
+          + tileScores['s']
+          + tileScores['a']
+        ) * 2 // dw
+      ;
+
+      board.getScoreForWords(words).should.equal(expectedScore);
+    });
+
+    it(`only applies double words to correct words`, function() {
+      const move = new Move();
+      move.add(new Tile('s'), 9, 10);
+      move.add(new Tile('a'), 10, 10);
+      const words = board.getWordsForMove(move);
+
+      const expectedScore = 0
+        + (0
+          + tileScores['s']
+          + tileScores['l']
+        )
+        +
+        (0
+          + tileScores['s']
+          + tileScores['a']
+        ) * 2 // dw
+        +
+        (0
+          + tileScores['a']
+          + tileScores['e']
+        ) * 2 // dw
+      ;
+
+      board.getScoreForWords(words).should.equal(expectedScore);
+    });
+
+    it(`applies triple words`, function() {
+      const move = new Move();
+      move.add(new Tile('o'), 7, 12);
+      move.add(new Tile('u'), 7, 13);
+      move.add(new Tile('l'), 7, 14);
+      const words = board.getWordsForMove(move);
+
+      const expectedScore = 0
+        + (0
+          + tileScores['l']
+          + tileScores['o']
+          + tileScores['v']
+          + tileScores['e']
+          + tileScores['s']
+          + tileScores['o']
+          + tileScores['u']
+          + tileScores['l']
+        ) * 3 // tw
+      ;
+
+      board.getScoreForWords(words).should.equal(expectedScore);
+    });
+    it(`triple words multiply correctly`, function() {
+      const board = createBoard(`
+        .012345678901234
+        0               
+        1               
+        2               
+        3               
+        4               
+        5               
+        6               
+        7    hello           
+        8       o       
+        9       v       
+        0       e       
+        1       sale       
+        2       o       
+        3       u       
+        4               
+      `);
+
+      const move = new Move();
+      move.add(new Tile('t'), 0, 14);
+      move.add(new Tile('e'), 1, 14);
+      move.add(new Tile('r'), 2, 14);
+      move.add(new Tile('a'), 3, 14);
+      move.add(new Tile('g'), 4, 14);
+      move.add(new Tile('o'), 5, 14);
+      move.add(new Tile('u'), 6, 14);
+      move.add(new Tile('l'), 7, 14);
+      const words = board.getWordsForMove(move);
+
+      const expectedScore = 0
+        + (0
+          + tileScores['l']
+          + tileScores['o']
+          + tileScores['v']
+          + tileScores['e']
+          + tileScores['s']
+          + tileScores['o']
+          + tileScores['u']
+          + tileScores['l']
+        ) * 3 // tw
+        + (0
+          + tileScores['t']
+          + tileScores['e']
+          + tileScores['r']
+          + tileScores['a'] * 2
+          + tileScores['g']
+          + tileScores['o']
+          + tileScores['u']
+          + tileScores['l']
+        ) * 3 * 3 // tw*2
+      ;
+
+      board.getScoreForWords(words).should.equal(expectedScore);
+    });
+
+    it(`double words multiply correctly`, function() {
+      const move = new Move();
+      move.add(new Tile('o'), 4, 4);
+      move.add(new Tile('o'), 4, 5);
+      move.add(new Tile('o'), 4, 6);
+      move.add(new Tile('o'), 4, 8);
+      move.add(new Tile('o'), 4, 9);
+      move.add(new Tile('o'), 4, 10);
+      const words = board.getWordsForMove(move);
+
+      const expectedScore = 0
+        + (0
+          + tileScores['o']
+          + tileScores['o']
+          + tileScores['o']
+          + tileScores['h']
+          + tileScores['o']
+          + tileScores['o']
+          + tileScores['o']
+        ) * 2 * 2 // dw * 2
+      ;
+
+      board.getScoreForWords(words).should.equal(expectedScore);
+    });
+
+    it(`doesn't use action tiles for tiles already on the board`, function() {
+      const move = new Move();
+      move.add(new Tile('s'), 11, 11);
+      const words = board.getWordsForMove(move);
+
+      const expectedScore = 0
+        + (0
+          + tileScores['s']
+          + tileScores['a']
+          + tileScores['l']
+          + tileScores['e']
+          + tileScores['s']
+        ) * 2 // dw
+      ;
+
+      board.getScoreForWords(words).should.equal(expectedScore);
+    });
+
+    it(`doesn't assign a score to new joker tiles`, function() {
+      const move = new Move();
+      move.add(new Tile('q', true), 9, 7);
+      const words = board.getWordsForMove(move);
+
+      const expectedScore = 0
+        + (0
+          + tileScores['h']
+          + tileScores['e']
+          + tileScores['l']
+          + tileScores['l']
+          + tileScores['o']
+          + 0
+        )
+      ;
+
+      board.getScoreForWords(words).should.equal(expectedScore);
+    });
+
+    it(`doesn't assign a score to existing joker tiles`, function() {
+      const board = createDemoBoard();
+      board.placeTile(new Tile('q', true), 9, 7);
+      const move = new Move();
+      move.add(new Tile('s'), 10, 7);
+      const words = board.getWordsForMove(move);
+
+      const expectedScore = 0
+        + (0
+          + tileScores['h']
+          + tileScores['e']
+          + tileScores['l']
+          + tileScores['l']
+          + tileScores['o']
+          + 0
+          + tileScores['s']
+        )
+      ;
+
+      board.getScoreForWords(words).should.equal(expectedScore);
+    });
   });
 });
