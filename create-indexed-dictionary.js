@@ -10,18 +10,25 @@ function indexWordList() {
   return through(
     function (chunk, enc, cb) {
       const str = chunk.toString();
+      const levels = 3;
 
-      if (str.length < 3) {
+      if (str.length < 2) {
         cb();
         return;
       }
 
-      const firstIndex = wordLookup[str[0]] ||
-        (wordLookup[str[0]] = {});
-      const secondIndex = firstIndex[str[1]] ||
-        (firstIndex[str[1]] = []);
-      
-      secondIndex.push(str);
+      let index = wordLookup;
+      let i = 0;
+
+      for (; i < (levels - 1); i++) {
+        index = index[str[i] || ''] ||
+          (index[str[i] || ''] = {});
+      }
+
+      const words = index[str[i] || ''] ||
+        (index[str[i] || ''] = []);
+
+      words.push(str);
       cb();
     },
     function (cb) { // flush function
