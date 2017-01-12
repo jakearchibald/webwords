@@ -25,6 +25,8 @@ export default class Tile {
   constructor(letter, isJoker = false) {
     this.letter = letter;
     this.isJoker = isJoker;
-    this.score = isJoker ? 0 : scores[letter];
+  }
+  get score() {
+    return this.isJoker ? 0 : scores[this.letter];
   }
 }

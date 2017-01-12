@@ -43,4 +43,11 @@ Also don't ask for notification permission until after the first move.
   * Placements (empty if skipped or swapped)
   * Number of letters in bag remaining (so it can be tracked if there is a skip from each player)
 
+Serverside "game" methods:
+* Should the game end now? Eg, a round of skips with an empty bag, or player has no letters remaining + empty bag
+* Swap letters from player
+* Remove letters from player
+* Give letters to player from bag
+
+
 Store "friends" on client, which is anyone the user has started a game with.
