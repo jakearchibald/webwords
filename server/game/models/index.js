@@ -14,30 +14,12 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import mongoose from '../mongoose-db';
-
-const letterFrequency = [
-  // frequency, letters
-  [1, 'kjxqz'],
-  [2, ' bcmpfhvwy'],
-  [3, 'g'],
-  [4, 'lsud'],
-  [6, 'nrt'],
-  [8, 'o'],
-  [9, 'ai'],
-  [12, 'e']
-];
-
-function defaultLetterBag() {
-  return letterFrequency.reduce((str, [frequency, letters]) => {
-    return str + letters.repeat(frequency);
-  }, '');
-}
+import mongoose from '../../mongoose-db';
 
 const gameSchema = mongoose.Schema({
-  letterBag: {type: String, default: defaultLetterBag},
-  over: {type: Boolean, default: false},
-  started: {type: Date, default: Date.now},
+  letterBag: String,
+  over: Boolean,
+  started: Date,
   moves: [{
     placements: [{
       x: Number,
@@ -51,20 +33,17 @@ const gameSchema = mongoose.Schema({
     date: {type: Date, default: Date.now}
   }],
   players: [{
-    score: {type: Number, default: 0},
-    letters: {type: String},
-    resigned: {type: Boolean, default: false},
+    score: Number,
+    letters: String,
+    resigned: Boolean,
     user: {type: mongoose.Schema.Types.ObjectId, ref: 'User', index: true}
   }]
 });
 
 gameSchema.index({'players.user': 1, over: 1, started: 1});
 
-gameSchema.virtual('currentPlayer').get(function() {
-  return this.players[this.moves.length % this.players.length];
-});
 
-gameSchema.methods.shouldNaturallyEnd = function() {
+/*gameSchema.methods.shouldNaturallyEnd = function() {
   // Can't end while there's letters in the letter bag
   if (this.letterBag) return false;
 
@@ -79,6 +58,6 @@ gameSchema.methods.shouldNaturallyEnd = function() {
   return playersLastMove
     .every(move => move.placements.length == 0 && move.bagWasEmpty);
   
-};
+};*/
 
 export const Game = mongoose.model('Game', gameSchema);

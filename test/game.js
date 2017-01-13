@@ -17,121 +17,125 @@
 /* eslint-env mocha */
 import 'source-map-support/register';
 import should from 'should';
-import {Game} from '../game/models';
+import {Game as GameModel} from '../game/models';
+import Game from '../shared/game';
+
+function twoPlayerGame() {
+  const storage = new GameModel({
+    players: [{user: 123}, {user: 456}]
+  });
+
+  const game = new Game(storage);
+  game.init();
+
+  return game;
+}
 
 describe('Game', function() {
+  describe('#init', function() {
+    it(`creates a game with two players`, function() {
+      const game = twoPlayerGame();
+      game.players.length.should.be.equal(2);
+    });
+
+    it(`gives players letters from bag`, function() {
+      const game = twoPlayerGame();
+      const numberOfTiles = 100;
+
+      game.letterBag.length.should.equal(numberOfTiles - 7 * 2);
+
+      for (const player of game.players) {
+        player.letters.length.should.equal(7);
+      }
+    });
+  });
+
   describe('#currentPlayer', function() {
     it(`returns player one if no moves have been played`, function() {
-      const game = new Game({
-        players: [
-          {score: 1},
-          {score: 2}
-        ]
-      });
+      const game = twoPlayerGame();
+      game.players[0].score = 1;
+      game.players[1].score = 2;
       game.currentPlayer.score.should.equal(1);
     });
 
     it(`returns player one if it's their turn`, function() {
-      const game = new Game({
-        moves: [
-          {bagWasEmpty: false},
-          {bagWasEmpty: false},
-          {bagWasEmpty: false},
-          {bagWasEmpty: false}
-        ],
-        players: [
-          {score: 1},
-          {score: 2}
-        ]
-      });
+      const game = twoPlayerGame();
+      game.players[0].score = 1;
+      game.players[1].score = 2;
+      game.moves = [
+        {bagWasEmpty: false},
+        {bagWasEmpty: false},
+        {bagWasEmpty: false},
+        {bagWasEmpty: false}
+      ];
+
       game.currentPlayer.score.should.equal(1);
     });
 
     it(`returns player two if it's their turn`, function() {
-      const game = new Game({
-        moves: [
-          {bagWasEmpty: false},
-          {bagWasEmpty: false},
-          {bagWasEmpty: false}
-        ],
-        players: [
-          {score: 1},
-          {score: 2}
-        ]
-      });
+      const game = twoPlayerGame();
+      game.players[0].score = 1;
+      game.players[1].score = 2;
+      game.moves = [
+        {bagWasEmpty: false},
+        {bagWasEmpty: false},
+        {bagWasEmpty: false}
+      ];
       game.currentPlayer.score.should.equal(2);
     });
   });
 
-  describe('#shouldNaturallyEnd', function() {
-    it(`returns false if not`, function() {
-      const game = new Game({
-        players: [
-          {score: 1, letters: 'a'},
-          {score: 2, letters: 'b'}
-        ]
-      });
-
-      game.shouldNaturallyEnd().should.be.false();
-      game.moves.push({bagWasEmpty: false});
-      game.shouldNaturallyEnd().should.be.false();
+  describe('#playMove', function() {
+    it(`throws if no move provided`, function() {
+      
     });
 
-    it(`returns true if a player is out of letters and letter bag is empty`, function() {
-      const game = new Game({
-        players: [
-          {score: 1, letters: ''},
-          {score: 2, letters: 'b'}
-        ],
-        letterBag: ''
-      });
+    it(`throws if tile placement is invalid`);
 
-      game.shouldNaturallyEnd().should.be.true();
-      game.moves.push({bagWasEmpty: true});
-      game.shouldNaturallyEnd().should.be.true();
-    });
+    it(`throws if words aren't in the dictionary`);
 
-    it(`returns true if all players skip and letter bag is empty`, function() {
-      const game = new Game({
-        players: [
-          {score: 1, letters: 'a'},
-          {score: 2, letters: 'b'}
-        ],
-        letterBag: '',
-        moves: [
-          {bagWasEmpty: false},
-          {bagWasEmpty: true},
-          {bagWasEmpty: true}
-        ]
-      });
+    it(`throws if player doesn't have correct letters`);
 
-      game.shouldNaturallyEnd().should.be.true();
-    });
+    it(`throws if player doesn't have enough of a particular letter`);
+
+    it(`throws if game has already ended`);
+
+    it(`adds move to move list`);
+
+    it(`updates required player's score`);
+
+    // TODO: look up correct rule
+    it(`awards player a bonus if they play x tiles`);
+
+    it(`removes letters from player's set after move`);
+
+    it(`replenishes player's tiles from the letter bag after move`);
+
+    it(`copes if there are fewer tiles in bag than user needs`);
+
+    it(`copes if there are no tiles in the tile bag`);
+
+    it(`replenishes player's tiles after move`);
+
+    it(`does not end game if game is ongoing`);
+
+    it(`ends if player is out of letters and letter bag is empty`);
+
+    it(`awards winner double the tile value other players have left`);
+
   });
 
-  describe('#naturallyEndGame', function() {
-    it(`sets 'ongoing' to false`);
-    it(`fines players for letters remaining`);
+  describe('#playSwap', function() {
   });
 
-  describe('#removeLettersFromPlayer', function() {
-    it(`removes letters`);
-    it(`throws if player doesn't have those letters`);
-  });
-
-  describe('#pickLettersFromBag', function() {
-    it(`picks letters at random from bag`);
-  });
-
-  describe('#putLettersInBag', function() {
-    it(`works`);
-  });
-
-  describe('#giveLettersToUser', function() {
-    it(`works`);
+  describe('#skipTurn', function() {
+    // TODO: change this for the correct rule
+    // TODO: check it doesn't adjust scores due to player's tiles
+    it(`ends if all players skip and letter bag is empty`);
   });
 
   describe('#resignPlayer', function() {
+    // TODO: does not change player's scores
     it('sets resigned');
     it('sets over');
   });

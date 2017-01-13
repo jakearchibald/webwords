@@ -14,20 +14,19 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
+import dictionaryIndex from './sowpods';
+
 export default class Dictionary {
-  constructor(index) {
-    this._index = index;
-  }
   includes(word) {
-    let index = this._index;
+    let index = dictionaryIndex;
     let i = 0;
 
     while (!Array.isArray(index)) {
       index = index[word[i] || ''];
-      if (!index) return false;
+      if (!index) return Promise.resolve(false);
       i++;
     }
 
-    return index.includes(word);
+    return Promise.resolve(index.includes(word));
   }
 }

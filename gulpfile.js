@@ -59,7 +59,11 @@ const paths = {
   },
   dictionary: {
     src: 'shared/dictionary/**/*.txt',
-    dest: 'build/shared/dictionary'
+    dest: 'build/game/models'
+  },
+  dictionaryCopy: {
+    src: 'shared/dictionary/**/*.txt',
+    dest: 'build/static/dictionary'
   },
   scss: {
     src: 'client/css/**/*.scss',
@@ -196,6 +200,12 @@ function copy() {
   }).pipe(gulp.dest(paths.copy.dest));
 }
 
+function dictionaryCopy() {
+  return gulp.src(paths.dictionaryCopy.src, {
+    since: gulp.lastRun(dictionaryCopy)
+  }).pipe(gulp.dest(paths.dictionaryCopy.dest));
+}
+
 function createScriptTask(src, dest) {
   const parsedPath = path.parse(src);
   const isServiceWorker = false;
@@ -299,6 +309,7 @@ function watch() {
   // client
   gulp.watch(paths.scss.src, scss);
   gulp.watch(paths.copy.src, copy);
+  gulp.watch(paths.dictionaryCopy.src, dictionaryCopy);
 
   for (const item of browserScripts) {
     gulp.watch(path.parse(item.src).dir + '/**/*.js', item.task);
@@ -310,7 +321,7 @@ gulp.task('browserScripts', gulp.parallel(...browserScripts.map(i => i.task)));
 
 const mainBuild = gulp.series(
   clean,
-  gulp.parallel(serverScripts, testScripts, serverTemplates, sharedScripts, dictionary, copy, scss, 'browserScripts')
+  gulp.parallel(serverScripts, testScripts, serverTemplates, sharedScripts, dictionary, copy, dictionaryCopy, scss, 'browserScripts')
 );
 
 gulp.task('build', gulp.series(
