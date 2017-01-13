@@ -14,6 +14,14 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
+import ExtendableError from 'es6-error';
+
+import Move from './move';
+import Board from './board';
+import Tile from './tile';
+
+export class InvalidPlacementError extends ExtendableError {}
+
 const LETTERS_PER_PLAYER = 7;
 
 const letterFrequency = [
@@ -60,6 +68,32 @@ export default class Game {
       player.resigned = false;
       this._giveLettersToPlayer(player);
     }
+  }
+  /**
+   * Creates a Board for the current game.
+   * 
+   * @returns {Board}
+   */
+  createBoard() {
+    const board = new Board();
+
+    for (const move of this.moves) {
+      for (const placement of move.placements) {
+        board.placeTile(new Tile(placement.letter, placement.isJoker), placement.x, placement.y);
+      }
+    }
+    return board;
+  }
+  /**
+   * @param {Move} move
+   * @returns {Promise<Boolean>}
+   */
+  async playMove(move) {
+    if (!move) throw TypeError('No move provided');
+
+    const board = this.createBoard();
+    
+    if (!board.placementsValid(move)) throw new InvalidPlacementError();
   }
   _giveLettersToPlayer(player) {
     for (let i = player.letters.length; i < LETTERS_PER_PLAYER; i++) {

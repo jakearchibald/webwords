@@ -19,7 +19,14 @@ import 'source-map-support/register';
 import should from 'should';
 import {Game as GameModel} from '../game/models';
 import Game from '../shared/game';
+import {InvalidPlacementError} from '../shared/game';
+import Move from '../shared/game/move';
+import Tile from '../shared/game/tile';
+import Board from '../shared/game/board';
 
+/**
+ * @returns {Game}
+ */
 function twoPlayerGame() {
   const storage = new GameModel({
     players: [{user: 123}, {user: 456}]
@@ -30,6 +37,45 @@ function twoPlayerGame() {
 
   return game;
 }
+
+// These are the same moves as createDemoBoard() in the board tests
+const demoMoves = [{
+  placements: [{
+    x: 4, y: 7, letter: 'h', isJoker: false
+  }, {
+    x: 5, y: 7, letter: 'e', isJoker: false
+  }, {
+    x: 6, y: 7, letter: 'l', isJoker: false
+  }, {
+    x: 7, y: 7, letter: 'l', isJoker: false
+  }, {
+    x: 8, y: 7, letter: 'o', isJoker: false
+  }],
+  bagWasEmpty: false,
+  date: Date.now()
+}, {
+  placements: [{
+    x: 7, y: 8, letter: 'o', isJoker: false
+  }, {
+    x: 7, y: 9, letter: 'v', isJoker: false
+  }, {
+    x: 7, y: 10, letter: 'e', isJoker: false
+  }],
+  bagWasEmpty: false,
+  date: Date.now()
+}, {
+  placements: [{
+    x: 7, y: 11, letter: 's', isJoker: false
+  }, {
+    x: 8, y: 11, letter: 'a', isJoker: false
+  }, {
+    x: 9, y: 11, letter: 'l', isJoker: false
+  }, {
+    x: 10, y: 11, letter: 'e', isJoker: false
+  }],
+  bagWasEmpty: false,
+  date: Date.now()
+}];
 
 describe('Game', function() {
   describe('#init', function() {
@@ -85,12 +131,56 @@ describe('Game', function() {
     });
   });
 
-  describe('#playMove', function() {
-    it(`throws if no move provided`, function() {
-      
+  describe('#createBoard', function() {
+    it(`returns a board`, function() {
+      const game = twoPlayerGame();
+      game.moves = demoMoves;
+
+      game.createBoard().should.be.an.instanceOf(Board);
     });
 
-    it(`throws if tile placement is invalid`);
+    it(`puts tiles in the correct place`, function() {
+      const game = twoPlayerGame();
+      game.moves = demoMoves;
+      const board = game.createBoard();
+
+      const tileIndex = {};
+
+      for (const move of demoMoves) {
+        for (const placement of move.placements) {
+          tileIndex[`${placement.x}:${placement.y}`] = new Tile(placement.letter, placement.isJoker);
+        }
+      }
+
+      for (let y = 0; y < board.height; y++) {
+        for (let x = 0; x < board.width; x++) {
+          should(board.getTile(x, y)).eql(tileIndex[`${x}:${y}`]);
+        }
+      }
+    });
+  });
+
+  describe('#playMove', function() {
+    it(`throws if no move provided`, async function() {
+      const game = twoPlayerGame();
+      await game.playMove().should.be.rejectedWith(TypeError);
+    });
+
+    it(`throws if tile placement is invalid`, async function() {
+      const game = twoPlayerGame();
+      game.moves = demoMoves;
+
+      const emptyMove = new Move();
+
+      await game.playMove(emptyMove).should.be.rejectedWith(InvalidPlacementError);
+
+      const move = new Move();
+      move.add(new Tile('a'), 9, 7);
+      move.add(new Tile('a'), 10, 7);
+      move.add(new Tile('a'), 8, 8);
+
+      await game.playMove(move).should.be.rejectedWith(InvalidPlacementError);
+    });
 
     it(`throws if words aren't in the dictionary`);
 

@@ -16,6 +16,7 @@
 */
 import Word from './word';
 import Tile from './tile';
+import Move from './move';
 
 const BOARD_WIDTH = 15;
 const BOARD_HEIGHT = 15;
@@ -78,6 +79,11 @@ export default class Board {
       y < this.height
     );
   }
+  /**
+   * @param {Tile} tile
+   * @param {Number} x
+   * @param {Number} y
+   */
   placeTile(tile, x, y) {
     if (!this.inBounds(x, y)) throw Error('Invalid tile placement');
 
@@ -92,7 +98,11 @@ export default class Board {
   getTile(x, y) {
     return this._tiles[`${x}:${y}`];
   }
-  validatePlacement(move) {
+  /**
+   * @param {Move} move
+   * @returns {Boolean}
+   */
+  placementsValid(move) {
     // Must have placed a tile
     if (move.placements.length == 0) return false;
 

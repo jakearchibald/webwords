@@ -24,10 +24,8 @@ const gameSchema = mongoose.Schema({
     placements: [{
       x: Number,
       y: Number,
-      tile: {
-        letter: String,
-        isJoker: Boolean
-      }
+      letter: String,
+      isJoker: Boolean
     }],
     bagWasEmpty: {type: Boolean, required: true},
     date: {type: Date, default: Date.now}

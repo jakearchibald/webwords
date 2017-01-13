@@ -225,18 +225,18 @@ describe('Board', function() {
     });
   });
 
-  describe('#validatePlacement', function() {
+  describe('#placementsValid', function() {
     it('exists', function() {
       const board = new Board();
-      board.validatePlacement.should.be.a.Function();
+      board.placementsValid.should.be.a.Function();
     });
 
     it('rejects empty moves', function() {
       const emptyBoard = new Board();
       const board = createDemoBoard();
       const emptyMove = new Move();
-      emptyBoard.validatePlacement(emptyMove).should.be.false();
-      board.validatePlacement(emptyMove).should.be.false();
+      emptyBoard.placementsValid(emptyMove).should.be.false();
+      board.placementsValid(emptyMove).should.be.false();
     });
 
     it('rejects non-linear placements', function() {
@@ -245,12 +245,12 @@ describe('Board', function() {
       move.add(new Tile('a'), 9, 7);
       move.add(new Tile('a'), 10, 7);
       move.add(new Tile('a'), 8, 8);
-      board.validatePlacement(move).should.be.false();
+      board.placementsValid(move).should.be.false();
 
       move = new Move();
       move.add(new Tile('a'), 6, 6);
       move.add(new Tile('a'), 7, 5);
-      board.validatePlacement(move).should.be.false();
+      board.placementsValid(move).should.be.false();
     });
 
     it(`rejects first moves that don't go through the centre`, function() {
@@ -259,19 +259,19 @@ describe('Board', function() {
       move.add(new Tile('a'), 1, 1);
       move.add(new Tile('a'), 1, 2);
       move.add(new Tile('a'), 1, 3);
-      emptyBoard.validatePlacement(move).should.be.false();
+      emptyBoard.placementsValid(move).should.be.false();
 
       move = new Move();
       move.add(new Tile('a'), 5, 7);
       move.add(new Tile('a'), 6, 7);
       move.add(new Tile('a'), 4, 7);
-      emptyBoard.validatePlacement(move).should.be.false();
+      emptyBoard.placementsValid(move).should.be.false();
 
       move = new Move();
       move.add(new Tile('a'), 8, 8);
       move.add(new Tile('a'), 8, 9);
       move.add(new Tile('a'), 8, 10);
-      emptyBoard.validatePlacement(move).should.be.false();
+      emptyBoard.placementsValid(move).should.be.false();
     });
 
     it(`rejects moves that aren't ajacent to an existing tile`, function() {
@@ -280,13 +280,13 @@ describe('Board', function() {
       move.add(new Tile('a'), 0, 0);
       move.add(new Tile('a'), 1, 0);
       move.add(new Tile('a'), 2, 0);
-      board.validatePlacement(move).should.be.false();
+      board.placementsValid(move).should.be.false();
 
       move = new Move();
       move.add(new Tile('a'), 10, 7);
       move.add(new Tile('a'), 11, 7);
       move.add(new Tile('a'), 12, 7);
-      board.validatePlacement(move).should.be.false();
+      board.placementsValid(move).should.be.false();
     });
 
     it(`rejects moves that cover an existing tile`, function() {
@@ -295,7 +295,7 @@ describe('Board', function() {
       move.add(new Tile('a'), 4, 6);
       move.add(new Tile('a'), 4, 7);
       move.add(new Tile('a'), 4, 8);
-      board.validatePlacement(move).should.be.false();
+      board.placementsValid(move).should.be.false();
     });
 
     it(`rejects moves that place multiple tiles on the same square`, function() {
@@ -305,7 +305,7 @@ describe('Board', function() {
       move.add(new Tile('a'), 4, 5);
       move.add(new Tile('a'), 4, 6);
       move.add(new Tile('a'), 4, 5);
-      board.validatePlacement(move).should.be.false();
+      board.placementsValid(move).should.be.false();
     });
 
     it(`rejects moves that don't form a contiguous line`, function() {
@@ -315,27 +315,27 @@ describe('Board', function() {
       move.add(new Tile('a'), 4, 5);
       move.add(new Tile('a'), 4, 6);
       move.add(new Tile('a'), 4, 9);
-      board.validatePlacement(move).should.be.false();
+      board.placementsValid(move).should.be.false();
 
       move = new Move();
       move.add(new Tile('a'), 11, 11);
       move.add(new Tile('a'), 11, 13);
       move.add(new Tile('a'), 11, 14);
-      board.validatePlacement(move).should.be.false();
+      board.placementsValid(move).should.be.false();
 
       move = new Move();
       move.add(new Tile('a'), 2, 2);
       move.add(new Tile('a'), 3, 2);
       move.add(new Tile('a'), 4, 2);
       move.add(new Tile('a'), 6, 2);
-      board.validatePlacement(move).should.be.false();
+      board.placementsValid(move).should.be.false();
 
       move = new Move();
       move.add(new Tile('a'), 2, 2);
       move.add(new Tile('a'), 4, 2);
       move.add(new Tile('a'), 6, 2);
       move.add(new Tile('a'), 8, 2);
-      board.validatePlacement(move).should.be.false();
+      board.placementsValid(move).should.be.false();
     });
 
     it(`rejects out of bound moves`, function() {
@@ -346,7 +346,7 @@ describe('Board', function() {
       move.add(new Tile('a'), 1, 7);
       move.add(new Tile('a'), 2, 7);
       move.add(new Tile('a'), 3, 7);
-      board.validatePlacement(move).should.be.false();
+      board.placementsValid(move).should.be.false();
 
       move = new Move();
       move.add(new Tile('a'), 9, 7);
@@ -356,14 +356,14 @@ describe('Board', function() {
       move.add(new Tile('a'), 13, 7);
       move.add(new Tile('a'), 14, 7);
       move.add(new Tile('a'), 15, 7);
-      board.validatePlacement(move).should.be.false();
+      board.placementsValid(move).should.be.false();
 
       move = new Move();
       move.add(new Tile('a'), 10, 12);
       move.add(new Tile('a'), 10, 13);
       move.add(new Tile('a'), 10, 14);
       move.add(new Tile('a'), 10, 15);
-      board.validatePlacement(move).should.be.false();
+      board.placementsValid(move).should.be.false();
 
       move = new Move();
       move.add(new Tile('a'), 4, 6);
@@ -374,7 +374,7 @@ describe('Board', function() {
       move.add(new Tile('a'), 4, 1);
       move.add(new Tile('a'), 4, 0);
       move.add(new Tile('a'), 4, -1);
-      board.validatePlacement(move).should.be.false();
+      board.placementsValid(move).should.be.false();
     });
 
     it(`allows first moves that go through the centre`, function() {
@@ -383,7 +383,7 @@ describe('Board', function() {
       move.add(new Tile('a'), 6, 7);
       move.add(new Tile('a'), 7, 7);
       move.add(new Tile('a'), 8, 7);
-      board.validatePlacement(move).should.be.true();
+      board.placementsValid(move).should.be.true();
     });
 
     it(`allows moves that touch tiles above once`, function() {
@@ -391,7 +391,7 @@ describe('Board', function() {
       let move = new Move();
       move.add(new Tile('a'), 10, 13);
       move.add(new Tile('a'), 10, 12);
-      board.validatePlacement(move).should.be.true();
+      board.placementsValid(move).should.be.true();
     });
 
     it(`allows moves that touch tiles above many`, function() {
@@ -403,7 +403,7 @@ describe('Board', function() {
       move.add(new Tile('a'), 9, 12);
       move.add(new Tile('a'), 10, 12);
       move.add(new Tile('a'), 11, 12);
-      board.validatePlacement(move).should.be.true();
+      board.placementsValid(move).should.be.true();
     });
 
     it(`allows moves that touch tiles below once`, function() {
@@ -411,7 +411,7 @@ describe('Board', function() {
       let move = new Move();
       move.add(new Tile('a'), 4, 6);
       move.add(new Tile('a'), 4, 5);
-      board.validatePlacement(move).should.be.true();
+      board.placementsValid(move).should.be.true();
     });
 
     it(`allows moves that touch tiles below many`, function() {
@@ -421,7 +421,7 @@ describe('Board', function() {
       move.add(new Tile('a'), 4, 6);
       move.add(new Tile('a'), 5, 6);
       move.add(new Tile('a'), 6, 6);
-      board.validatePlacement(move).should.be.true();
+      board.placementsValid(move).should.be.true();
     });
 
     it(`allows moves that touch tiles to the left once`, function() {
@@ -430,7 +430,7 @@ describe('Board', function() {
       move.add(new Tile('a'), 11, 10);
       move.add(new Tile('a'), 11, 11);
       move.add(new Tile('a'), 11, 12);
-      board.validatePlacement(move).should.be.true();
+      board.placementsValid(move).should.be.true();
     });
 
     it(`allows moves that touch tiles to the left many`, function() {
@@ -439,7 +439,7 @@ describe('Board', function() {
       move.add(new Tile('a'), 8, 8);
       move.add(new Tile('a'), 8, 9);
       move.add(new Tile('a'), 8, 10);
-      board.validatePlacement(move).should.be.true();
+      board.placementsValid(move).should.be.true();
     });
 
     it(`allows moves that touch tiles to the right once`, function() {
@@ -448,7 +448,7 @@ describe('Board', function() {
       move.add(new Tile('a'), 4, 9);
       move.add(new Tile('a'), 5, 9);
       move.add(new Tile('a'), 6, 9);
-      board.validatePlacement(move).should.be.true();
+      board.placementsValid(move).should.be.true();
     });
 
     it(`allows moves that touch tiles to the right many`, function() {
@@ -458,14 +458,14 @@ describe('Board', function() {
       move.add(new Tile('a'), 6, 10);
       move.add(new Tile('a'), 6, 11);
       move.add(new Tile('a'), 6, 12);
-      board.validatePlacement(move).should.be.true();
+      board.placementsValid(move).should.be.true();
     });
 
     it(`allows moves that touch tiles on multiple axis`, function() {
       const board = createDemoBoard();
       let move = new Move();
       move.add(new Tile('a'), 8, 8);
-      board.validatePlacement(move).should.be.true();
+      board.placementsValid(move).should.be.true();
     });
 
     it(`allows moves either side of an existing tile`, function() {
@@ -473,7 +473,7 @@ describe('Board', function() {
       let move = new Move();
       move.add(new Tile('a'), 6, 9);
       move.add(new Tile('a'), 8, 9);
-      board.validatePlacement(move).should.be.true();
+      board.placementsValid(move).should.be.true();
     });
   });
 
