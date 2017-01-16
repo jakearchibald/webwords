@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "server-build/index.js",
   "scripts": {
-    "install-mongo": "docker pull mongo && docker create --name webwords-mongo -p 27017:27017 mongo",
+    "install-mongo": "docker pull mongo && docker create --name webwords-mongo -p 127.0.0.1:27017:27017 mongo",
     "serve": "gulp serve",
     "test": "mocha build/test",
     "test-debug": "mocha --debug-brk --inspect build/test"
