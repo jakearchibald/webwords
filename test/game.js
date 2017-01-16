@@ -19,10 +19,15 @@ import 'source-map-support/register';
 import should from 'should';
 import {Game as GameModel} from '../game/models';
 import Game from '../shared/game';
-import {InvalidPlacementError} from '../shared/game';
+import {
+  InvalidPlacementError, TileNotOwnedError,
+  NotInDictionaryError, GameOverError
+} from '../shared/game';
 import Move from '../shared/game/move';
 import Tile from '../shared/game/tile';
+import {scores as letterScores} from '../shared/game/tile';
 import Board from '../shared/game/board';
+import {includesMulti as dictionaryLookup} from '../game/models/dictionary';
 
 /**
  * @returns {Game}
@@ -163,47 +168,178 @@ describe('Game', function() {
   describe('#playMove', function() {
     it(`throws if no move provided`, async function() {
       const game = twoPlayerGame();
-      await game.playMove().should.be.rejectedWith(TypeError);
+      await game.playMove(undefined, dictionaryLookup).should.be.rejectedWith(TypeError);
     });
 
     it(`throws if tile placement is invalid`, async function() {
       const game = twoPlayerGame();
       game.moves = demoMoves;
+      game.players[1].letters = 'yes';
 
       const emptyMove = new Move();
 
-      await game.playMove(emptyMove).should.be.rejectedWith(InvalidPlacementError);
+      await game.playMove(emptyMove, dictionaryLookup).should.be.rejectedWith(InvalidPlacementError);
 
       const move = new Move();
-      move.add(new Tile('a'), 9, 7);
-      move.add(new Tile('a'), 10, 7);
-      move.add(new Tile('a'), 8, 8);
+      move.add(new Tile('y'), 8, 5);
+      move.add(new Tile('e'), 9, 5);
+      move.add(new Tile('s'), 10, 5);
 
-      await game.playMove(move).should.be.rejectedWith(InvalidPlacementError);
+      await game.playMove(move, dictionaryLookup).should.be.rejectedWith(InvalidPlacementError);
     });
 
-    it(`throws if words aren't in the dictionary`);
+    it(`throws if player doesn't have correct letters`, async function() {
+      const game = twoPlayerGame();
+      game.moves = demoMoves;
+      game.players[1].letters = 'elc ';
 
-    it(`throws if player doesn't have correct letters`);
+      const move = new Move();
+      move.add(new Tile('e'), 4, 8);
+      move.add(new Tile('l'), 4, 9);
+      move.add(new Tile('p'), 4, 10); // not in player's letters
 
-    it(`throws if player doesn't have enough of a particular letter`);
+      await game.playMove(move, dictionaryLookup).should.be.rejectedWith(TileNotOwnedError);
+    });
 
-    it(`throws if game has already ended`);
+    it(`throws if player doesn't have enough of a particular letter`, async function() {
+      const game = twoPlayerGame();
+      game.moves = demoMoves;
+      game.players[1].letters = 'elo ';
 
-    it(`adds move to move list`);
+      const move = new Move();
+      move.add(new Tile('e'), 4, 8);
+      move.add(new Tile('l'), 4, 9);
+      move.add(new Tile('l'), 4, 10); // player only has one l
+      move.add(new Tile('o'), 4, 11); 
 
-    it(`updates required player's score`);
+      await game.playMove(move, dictionaryLookup).should.be.rejectedWith(TileNotOwnedError);
+    });
 
-    // TODO: look up correct rule
-    it(`awards player a bonus if they play x tiles`);
+    it(`throws if words aren't in the dictionary`, async function() {
+      const game = twoPlayerGame();
+      game.moves = demoMoves;
+      game.players[1].letters = 'elc ';
+
+      const move = new Move();
+      move.add(new Tile('e'), 4, 8);
+      move.add(new Tile('l'), 4, 9);
+      move.add(new Tile('c'), 4, 10); // not in player's letters
+
+      const result = game.playMove(move, dictionaryLookup);
+
+      await result.should.be.rejectedWith(NotInDictionaryError);
+      await result.catch(err => err.invalidWords)
+        .should.eventually.eql(['helc']);
+    });
+
+    it(`throws if game has already ended`, async function() {
+      const game = twoPlayerGame();
+      game.moves = demoMoves;
+      game.over = true;
+      game.players[1].letters = 'elp ';
+
+      const move = new Move();
+      move.add(new Tile('e'), 4, 8);
+      move.add(new Tile('l'), 4, 9);
+      move.add(new Tile('p'), 4, 10);
+
+      await game.playMove(move, dictionaryLookup).should.be.rejectedWith(GameOverError);
+    });
+
+    it(`adds move to move list`, async function() {
+      const game = twoPlayerGame();
+      game.moves = demoMoves;
+      game.players[1].letters = 'elp ';
+
+      const move = new Move();
+      move.add(new Tile('e'), 4, 8);
+      move.add(new Tile('l'), 4, 9);
+      move.add(new Tile('p'), 4, 10);
+
+      await game.playMove(move, dictionaryLookup);
+
+      const lastMove = game.moves.slice(-1)[0].toJSON();
+
+      // Filter out Mongoose stuff
+      for (const placement of lastMove.placements) {
+        delete placement._id;
+      }
+      
+      lastMove.placements.should.eql([
+        {x: 4, y: 8, letter: 'e', isJoker: false},
+        {x: 4, y: 9, letter: 'l', isJoker: false},
+        {x: 4, y: 10, letter: 'p', isJoker: false}
+      ]);
+    });
+
+    it(`updates required player's score`, async function() {
+      const game = twoPlayerGame();
+      game.moves = demoMoves;
+      game.players[0].score = 10;
+      game.players[1].score = 20;
+      game.players[1].letters = 'elp ';
+
+      const move = new Move();
+      move.add(new Tile('e'), 4, 8);
+      move.add(new Tile('l'), 4, 9);
+      move.add(new Tile('p'), 4, 10);
+
+      await game.playMove(move, dictionaryLookup);
+
+      game.players[0].score.should.equal(10);
+      game.players[1].score.should.equal(
+        20 + (
+          letterScores['h'] +
+          letterScores['e'] +
+          letterScores['l'] +
+          letterScores['p']
+        ) * 2 // double word
+      );
+    });
+
+    it(`awards player a 50 point bonus if they play 7 tiles`, async function() {
+      const game = twoPlayerGame();
+      game.moves = demoMoves;
+      game.players[1].score = 20;
+      game.players[1].letters = ' habitats';
+
+      const move = new Move();
+      move.add(new Tile('a'), 4, 8);
+      move.add(new Tile('b'), 4, 9);
+      move.add(new Tile('i'), 4, 10);
+      move.add(new Tile('t'), 4, 11);
+      move.add(new Tile('a'), 4, 12);
+      move.add(new Tile('t'), 4, 13);
+      move.add(new Tile('s'), 4, 14);
+
+      await game.playMove(move, dictionaryLookup);
+
+      game.players[1].score.should.equal(
+        20 + (
+          letterScores['h'] +
+          letterScores['a'] +
+          letterScores['b'] +
+          letterScores['i'] +
+          letterScores['t'] +
+          letterScores['a'] +
+          letterScores['t'] + 
+          letterScores['s']
+        ) * 2 // double word
+        + 50 // Bonus
+      );
+    });
 
     it(`removes letters from player's set after move`);
+
+    it(`removes multiple of same letter from player's set after move`);
 
     it(`replenishes player's tiles from the letter bag after move`);
 
     it(`copes if there are fewer tiles in bag than user needs`);
 
     it(`copes if there are no tiles in the tile bag`);
+
+    it(`allows moves with a joker tile`);
 
     it(`replenishes player's tiles after move`);
 

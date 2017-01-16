@@ -21,6 +21,18 @@ import Board from './board';
 import Tile from './tile';
 
 export class InvalidPlacementError extends ExtendableError {}
+export class TileNotOwnedError extends ExtendableError {}
+export class GameOverError extends ExtendableError {}
+export class NotInDictionaryError extends ExtendableError {
+  /**
+   * @param {Array<String>} invalidWords
+   * @param {String} description
+   */
+  constructor(invalidWords, description) {
+    super(description);
+    this.invalidWords = invalidWords;
+  }
+}
 
 const LETTERS_PER_PLAYER = 7;
 
@@ -86,14 +98,55 @@ export default class Game {
   }
   /**
    * @param {Move} move
+   * @param {Function} inDictionary
    * @returns {Promise<Boolean>}
    */
-  async playMove(move) {
+  async playMove(move, dictionaryLookup) {
     if (!move) throw TypeError('No move provided');
+    if (this.over) throw new GameOverError();
 
     const board = this.createBoard();
     
     if (!board.placementsValid(move)) throw new InvalidPlacementError();
+
+    let remainingPlayerLetters = this.currentPlayer.letters;
+
+    for (const placement of move.placements) {
+      const letter = placement.tile.isJoker ? ' ' : placement.tile.letter;
+      const index = remainingPlayerLetters.indexOf(letter);
+      if (index == -1) throw new TileNotOwnedError(`Player does not have '${letter}'`);
+      // Remove letter from player's set
+      remainingPlayerLetters = remainingPlayerLetters.slice(0, index) + remainingPlayerLetters.slice(index + 1);
+    }
+
+    const words = board.getWordsForMove(move);
+    const wordStrings = words.map(word => word.toString());
+    const wordsValid = await dictionaryLookup(wordStrings);
+    const invalidWords = wordStrings.filter((_, i) => !wordsValid[i]);
+
+    if (invalidWords.length > 0) {
+      throw new NotInDictionaryError(invalidWords);
+    }
+
+    const player = this.currentPlayer;
+
+    this.moves.push({
+      bagWasEmpty: this.letterBag.length === 0,
+      date: Date.now(),
+      placements: move.placements.map(placement => ({
+        x: placement.x,
+        y: placement.y,
+        letter: placement.tile.letter,
+        isJoker: placement.tile.isJoker
+      }))
+    });
+
+    player.score += board.getScoreForWords(words);
+
+    // Bingo!
+    if (move.placements.length == LETTERS_PER_PLAYER) {
+      player.score += 50;
+    }
   }
   _giveLettersToPlayer(player) {
     for (let i = player.letters.length; i < LETTERS_PER_PLAYER; i++) {

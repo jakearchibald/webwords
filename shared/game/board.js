@@ -202,6 +202,10 @@ export default class Board {
 
     return true;
   }
+  /**
+   * @param {Move} move
+   * @returns {Array<Word>}
+   */
   getWordsForMove(move) {
     const skipForHorizontal = {};
     const skipForVertical = {};

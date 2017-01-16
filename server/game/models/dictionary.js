@@ -16,17 +16,32 @@
 */
 import dictionaryIndex from './sowpods';
 
-export default class Dictionary {
-  includes(word) {
-    let index = dictionaryIndex;
-    let i = 0;
+function isInIndex(word) {
+  let index = dictionaryIndex;
+  let i = 0;
 
-    while (!Array.isArray(index)) {
-      index = index[word[i] || ''];
-      if (!index) return Promise.resolve(false);
-      i++;
-    }
-
-    return Promise.resolve(index.includes(word));
+  while (!Array.isArray(index)) {
+    index = index[word[i] || ''];
+    if (!index) return false;
+    i++;
   }
+
+  return index.includes(word);
+}
+
+/**
+ * @param {String} word
+ * @returns {Promise<Boolean>}
+ */
+export function includes(word) {
+  return Promise.resolve(isInIndex(word));
+}
+
+/**
+ * @export
+ * @param {Array<String>} words
+ * @returns {Promise<Array<Boolean>>}
+ */
+export function includesMulti(words) {
+  return Promise.resolve(words.map(isInIndex));
 }

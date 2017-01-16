@@ -17,35 +17,46 @@
 /* eslint-env mocha */
 import 'source-map-support/register';
 import should from 'should';
-import Dictionary from '../game/models/dictionary';
+import {includes, includesMulti} from '../game/models/dictionary';
 
-describe('Dictionary', function() {
-  const dictionary = new Dictionary();
-
-  describe('#includes', function() {
-    it(`returns false for 0/1 letter words`, async function() {
-      await dictionary.includes('').should.eventually.be.false();
-      await dictionary.includes('a').should.eventually.be.false();
-    });
-
-    it(`returns true for valid two letter words`, async function() {
-      await dictionary.includes('it').should.eventually.be.true();
-      await dictionary.includes('qi').should.eventually.be.true();
-    });
-
-    it(`returns true for valid words`, async function() {
-      await dictionary.includes('house').should.eventually.be.true();
-      await dictionary.includes('finder').should.eventually.be.true();
-      await dictionary.includes('general').should.eventually.be.true();
-      await dictionary.includes('party').should.eventually.be.true();
-    });
-
-    it(`returns false for invalid words`, async function() {
-      await dictionary.includes('pumperflink').should.eventually.be.false();
-      await dictionary.includes('kerangaspliff').should.eventually.be.false();
-      await dictionary.includes('jumpintung').should.eventually.be.false();
-    });
+describe('includes', function() {
+  it(`returns false for 0/1 letter words`, async function() {
+    await includes('').should.eventually.be.false();
+    await includes('a').should.eventually.be.false();
   });
 
+  it(`returns true for valid two letter words`, async function() {
+    await includes('it').should.eventually.be.true();
+    await includes('qi').should.eventually.be.true();
+  });
+
+  it(`returns true for valid words`, async function() {
+    await includes('house').should.eventually.be.true();
+    await includes('finder').should.eventually.be.true();
+    await includes('general').should.eventually.be.true();
+    await includes('party').should.eventually.be.true();
+  });
+
+  it(`returns false for invalid words`, async function() {
+    await includes('pumperflink').should.eventually.be.false();
+    await includes('kerangaspliff').should.eventually.be.false();
+    await includes('jumpintung').should.eventually.be.false();
+  });
+});
+
+describe('includesMulti', function() {
+  it('works', async function() {
+    await includesMulti([
+      '', 'a',
+      'it', 'qi',
+      'house', 'finder', 'general', 'party',
+      'pumperflink', 'kerangaspliff', 'jumpintung'
+    ]).should.eventually.eql([
+      false, false, 
+      true, true,
+      true, true, true, true,
+      false, false, false
+    ]);
+  });
 });
 
