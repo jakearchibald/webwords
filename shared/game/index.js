@@ -19,6 +19,7 @@ import ExtendableError from 'es6-error';
 import Move from './move';
 import Board from './board';
 import Tile from './tile';
+import {scores as letterScores} from './tile';
 
 export class InvalidPlacementError extends ExtendableError {}
 export class TileNotOwnedError extends ExtendableError {}
@@ -109,15 +110,13 @@ export default class Game {
     
     if (!board.placementsValid(move)) throw new InvalidPlacementError();
 
-    let remainingPlayerLetters = this.currentPlayer.letters;
+    const player = this.currentPlayer;
 
-    for (const placement of move.placements) {
-      const letter = placement.tile.isJoker ? ' ' : placement.tile.letter;
-      const index = remainingPlayerLetters.indexOf(letter);
-      if (index == -1) throw new TileNotOwnedError(`Player does not have '${letter}'`);
-      // Remove letter from player's set
-      remainingPlayerLetters = remainingPlayerLetters.slice(0, index) + remainingPlayerLetters.slice(index + 1);
-    }
+    // This throws if the player doesn't have the correct tiles
+    this._takeLettersFromPlayer(
+      this.currentPlayer,
+      move.placements.map(p => p.tile.isJoker ? ' ' : p.tile.letter).join('')
+    );
 
     const words = board.getWordsForMove(move);
     const wordStrings = words.map(word => word.toString());
@@ -127,8 +126,6 @@ export default class Game {
     if (invalidWords.length > 0) {
       throw new NotInDictionaryError(invalidWords);
     }
-
-    const player = this.currentPlayer;
 
     this.moves.push({
       bagWasEmpty: this.letterBag.length === 0,
@@ -147,6 +144,36 @@ export default class Game {
     if (move.placements.length == LETTERS_PER_PLAYER) {
       player.score += 50;
     }
+
+    this._giveLettersToPlayer(player);
+
+    // Does that signal the end of the game?
+    if (player.letters.length == 0) {
+      this.over = true;
+
+      // The finishing player gets 2x the remaining tiles from other players
+      for (const otherPlayer of this.players) {
+        if (otherPlayer == player) continue;
+        for (const letter of [...otherPlayer.letters]) {
+          player.score += letterScores[letter] * 2;
+        }
+      }
+    }
+  }
+  /**
+   * @param {String} letters
+   */
+  playSwap(letters) {
+    const player = this.currentPlayer;
+    this._takeLettersFromPlayer(player, letters);
+    this.letterBag += letters;
+    this._giveLettersToPlayer(player);
+
+    this.moves.push({
+      bagWasEmpty: this.letterBag.length === 0,
+      date: Date.now(),
+      placements: []
+    });
   }
   _giveLettersToPlayer(player) {
     for (let i = player.letters.length; i < LETTERS_PER_PLAYER; i++) {
@@ -154,6 +181,22 @@ export default class Game {
       if (!letter) return; // bag empty
       player.letters += letter;
     }
+  }
+  /**
+   * @param {any} player
+   * @param {String} letters
+   */
+  _takeLettersFromPlayer(player, letters) {
+    let remainingPlayerLetters = player.letters;
+
+    for (const letter of letters) {
+      const index = remainingPlayerLetters.indexOf(letter);
+      if (index == -1) throw new TileNotOwnedError(`Player does not have '${letter}'`);
+      // Remove letter from player's set
+      remainingPlayerLetters = remainingPlayerLetters.slice(0, index) + remainingPlayerLetters.slice(index + 1);
+    }
+
+    player.letters = remainingPlayerLetters;
   }
   /**
    * @returns {String}

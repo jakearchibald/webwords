@@ -251,12 +251,16 @@ describe('Game', function() {
       game.moves = demoMoves;
       game.players[1].letters = 'elp ';
 
+      const prevLength = game.moves.length;
+
       const move = new Move();
       move.add(new Tile('e'), 4, 8);
       move.add(new Tile('l'), 4, 9);
       move.add(new Tile('p'), 4, 10);
 
       await game.playMove(move, dictionaryLookup);
+
+      game.moves.length.should.equal(prevLength + 1);
 
       const lastMove = game.moves.slice(-1)[0].toJSON();
 
@@ -329,41 +333,243 @@ describe('Game', function() {
       );
     });
 
-    it(`removes letters from player's set after move`);
+    it(`removes letters from player's set after move`, async function() {
+      const game = twoPlayerGame();
+      game.moves = demoMoves;
+      game.players[0].letters = 'elpp ';
+      game.players[1].letters = 'elpp ';
 
-    it(`removes multiple of same letter from player's set after move`);
+      game.letterBag = 'qudrn';
 
-    it(`replenishes player's tiles from the letter bag after move`);
+      const move = new Move();
+      move.add(new Tile('e'), 4, 8);
+      move.add(new Tile('l'), 4, 9);
+      move.add(new Tile('p'), 4, 10);
 
-    it(`copes if there are fewer tiles in bag than user needs`);
+      await game.playMove(move, dictionaryLookup);
 
-    it(`copes if there are no tiles in the tile bag`);
+      game.players[0].letters.should.equal('elpp ');
+      [...game.players[1].letters].sort().should.eql(
+        [...'p qudrn'].sort()
+      );
+      game.letterBag.should.equal('');
+    });
 
-    it(`allows moves with a joker tile`);
+    it(`removes multiple of same letter from player's set after move`, async function() {
+      const game = twoPlayerGame();
+      game.moves = demoMoves;
+      game.players[1].letters = 'hello ';
 
-    it(`replenishes player's tiles after move`);
+      game.letterBag = 'qudrn';
 
-    it(`does not end game if game is ongoing`);
+      const move = new Move();
+      move.add(new Tile('e'), 4, 8);
+      move.add(new Tile('l'), 4, 9);
+      move.add(new Tile('l'), 4, 10);
+      move.add(new Tile('o'), 4, 11);
 
-    it(`ends if player is out of letters and letter bag is empty`);
+      await game.playMove(move, dictionaryLookup);
 
-    it(`awards winner double the tile value other players have left`);
+      [...game.players[1].letters].sort().should.eql(
+        [...'h qudrn'].sort()
+      );
+    });
 
+    it(`copes if there are fewer tiles in bag than user needs`, async function() {
+      const game = twoPlayerGame();
+      game.moves = demoMoves;
+      game.players[1].letters = 'ello ';
+
+      game.letterBag = 'q';
+
+      const move = new Move();
+      move.add(new Tile('e'), 4, 8);
+      move.add(new Tile('l'), 4, 9);
+      move.add(new Tile('l'), 4, 10);
+      move.add(new Tile('o'), 4, 11);
+
+      await game.playMove(move, dictionaryLookup);
+
+      game.moves.slice(-1)[0].bagWasEmpty.should.be.false();
+
+      [...game.players[1].letters].sort().should.eql(
+        [...' q'].sort()
+      );
+    });
+
+    it(`copes if there are no tiles in the tile bag`, async function() {
+      const game = twoPlayerGame();
+      game.moves = demoMoves;
+      game.players[1].letters = 'ello ';
+
+      game.letterBag = '';
+
+      const move = new Move();
+      move.add(new Tile('e'), 4, 8);
+      move.add(new Tile('l'), 4, 9);
+      move.add(new Tile('l'), 4, 10);
+      move.add(new Tile('o'), 4, 11);
+
+      await game.playMove(move, dictionaryLookup);
+
+      game.moves.slice(-1)[0].bagWasEmpty.should.be.true();
+
+      [...game.players[1].letters].sort().should.eql(
+        [...' '].sort()
+      );
+    });
+
+    it(`allows moves with a joker tile`, async function() {
+      const game = twoPlayerGame();
+      game.moves = demoMoves;
+      game.players[1].score = 20;
+      game.players[1].letters = 'elp ';
+
+      game.letterBag = 'qudrnm';
+
+      const move = new Move();
+      move.add(new Tile('e', true), 4, 8);
+      move.add(new Tile('l'), 4, 9);
+      move.add(new Tile('p'), 4, 10);
+
+      await game.playMove(move, dictionaryLookup);
+
+      game.players[1].score.should.equal(
+        20 + (
+          letterScores['h'] +
+          // no score for e, as it's a joker
+          letterScores['l'] +
+          letterScores['p']
+        ) * 2 // double word
+      );
+
+      [...game.players[1].letters].sort().should.eql(
+        [...'equdrnm'].sort()
+      );
+    });
+
+    it(`does not end game if game is ongoing`, async function() {
+      const game = twoPlayerGame();
+      game.moves = demoMoves;
+      game.players[1].score = 20;
+      game.players[1].letters = 'elp ';
+
+      const move = new Move();
+      move.add(new Tile('e', true), 4, 8);
+      move.add(new Tile('l'), 4, 9);
+      move.add(new Tile('p'), 4, 10);
+
+      await game.playMove(move, dictionaryLookup);
+
+      game.over.should.be.false();
+    });
+
+    it(`ends if player is out of letters and letter bag is empty`, async function() {
+      const game = twoPlayerGame();
+      game.moves = demoMoves;
+      game.players[1].score = 20;
+      game.players[1].letters = 'elp';
+
+      game.letterBag = '';
+
+      const move = new Move();
+      move.add(new Tile('e'), 4, 8);
+      move.add(new Tile('l'), 4, 9);
+      move.add(new Tile('p'), 4, 10);
+
+      await game.playMove(move, dictionaryLookup);
+
+      game.over.should.be.true();
+    });
+
+    it(`awards winner double the tile value other players have left`, async function() {
+      const game = twoPlayerGame();
+      game.moves = demoMoves;
+      game.players[0].score = 10;
+      game.players[0].letters = 'q';
+      game.players[1].score = 20;
+      game.players[1].letters = 'elp';
+
+      game.letterBag = '';
+
+      const move = new Move();
+      move.add(new Tile('e'), 4, 8);
+      move.add(new Tile('l'), 4, 9);
+      move.add(new Tile('p'), 4, 10);
+
+      await game.playMove(move, dictionaryLookup);
+
+      game.over.should.be.true();
+      game.players[0].score.should.equal(10);
+      game.players[1].score.should.equal(
+        20 + (
+          letterScores['h'] +
+          letterScores['e'] +
+          letterScores['l'] +
+          letterScores['p']
+        ) * 2 // double word
+        + letterScores['q'] * 2 // remaining tile from other player
+      );
+    });
   });
 
   describe('#playSwap', function() {
+    it(`only swaps tiles selected`, function() {
+      const game = twoPlayerGame();
+      game.moves = demoMoves;
+      game.players[1].letters = 'asdf ';
+
+      game.letterBag = 'qudrn';
+
+      game.playSwap('df');
+
+      [...game.players[1].letters].should.containDeep([...'as']);
+    });
+
+    it(`can give players the same tiles back`, function() {
+      const game = twoPlayerGame();
+      game.moves = demoMoves;
+      game.players[1].letters = 'pqz';
+
+      game.letterBag = 'a';
+
+      game.playSwap('qz');
+
+      const includesQ = game.players[1].letters.includes('q');
+      const includesZ = game.players[1].letters.includes('z');
+
+      (includesQ || includesZ).should.be.true();
+    });
+
+    it(`adds to move list`, function() {
+      const game = twoPlayerGame();
+      game.moves = demoMoves;
+      const prevLength = game.moves.length;
+      game.playSwap(game.players[1].letters);
+
+      game.moves.length.should.equal(prevLength + 1);
+
+      const lastMove = game.moves.slice(-1)[0].toJSON();
+      lastMove.placements.should.eql([]);
+    });
   });
 
   describe('#skipTurn', function() {
     // TODO: change this for the correct rule
     // TODO: check it doesn't adjust scores due to player's tiles
-    it(`ends if all players skip and letter bag is empty`);
+    it(`adds to move list`);
   });
 
   describe('#resignPlayer', function() {
     // TODO: does not change player's scores
     it('sets resigned');
     it('sets over');
+  });
+
+  describe('scoreless ending', function() {
+    // TODO: look up rules
+    // If there's x number of scoreless moves, the game ends
+    it(`happenz`);
   });
 });
 
