@@ -168,7 +168,31 @@ export default class Game {
     this._takeLettersFromPlayer(player, letters);
     this.letterBag += letters;
     this._giveLettersToPlayer(player);
+    this._addSkipMove();
+  }
+  skipTurn() {
+    this._addSkipMove();
 
+    // The rest of this function checks to see if the game
+    // should end as a result of skipping.
+    if (this.letterBag.length != 0) return;
+    
+    // I don't see how this could realisticly happen, but
+    // checking for it anyway.
+    if (this.moves.length < this.players.length) return;
+
+    const lastPlayerMoves = this.moves.slice(-this.players.length);
+    const eachPlayerSkippedOnEmptyBag =
+      lastPlayerMoves.every(move => move.placements.length == 0 && move.bagWasEmpty);
+    
+    if (!eachPlayerSkippedOnEmptyBag) return;
+    this.over = true;
+  }
+  resignPlayer(player) {
+    player.resigned = true;
+    this.over = true;
+  }
+  _addSkipMove() {
     this.moves.push({
       bagWasEmpty: this.letterBag.length === 0,
       date: Date.now(),

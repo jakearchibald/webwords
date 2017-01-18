@@ -516,6 +516,8 @@ describe('Game', function() {
   describe('#playSwap', function() {
     it(`only swaps tiles selected`, function() {
       const game = twoPlayerGame();
+      const p1Score = game.players[0].score;
+      const p2Score = game.players[1].score;
       game.moves = demoMoves;
       game.players[1].letters = 'asdf ';
 
@@ -524,6 +526,8 @@ describe('Game', function() {
       game.playSwap('df');
 
       [...game.players[1].letters].should.containDeep([...'as']);
+      game.players[0].score.should.equal(p1Score);
+      game.players[1].score.should.equal(p2Score);
     });
 
     it(`can give players the same tiles back`, function() {
@@ -555,21 +559,82 @@ describe('Game', function() {
   });
 
   describe('#skipTurn', function() {
-    // TODO: change this for the correct rule
-    // TODO: check it doesn't adjust scores due to player's tiles
-    it(`adds to move list`);
+    it(`adds to move list & scores stay the same`, function() {
+      const game = twoPlayerGame();
+      game.moves = demoMoves;
+      const prevLength = game.moves.length;
+      game.skipTurn();
+
+      game.moves.length.should.equal(prevLength + 1);
+
+      const lastMove = game.moves.slice(-1)[0].toJSON();
+      lastMove.placements.should.eql([]);
+    });
   });
 
   describe('#resignPlayer', function() {
-    // TODO: does not change player's scores
-    it('sets resigned');
-    it('sets over');
+    it('sets resigned & over - does not change scores', function() {
+      const game = twoPlayerGame();
+      const p1Score = game.players[0].score;
+      const p2Score = game.players[1].score;
+      game.moves = demoMoves;
+
+      game.resignPlayer(game.players[0]);
+
+      game.players[0].score.should.equal(p1Score);
+      game.players[1].score.should.equal(p2Score);
+      game.players[0].resigned.should.be.true();
+      game.players[1].resigned.should.be.false();
+      game.over.should.be.true();
+    });
+
+    it('can resign either player', function() {
+      const game = twoPlayerGame();
+      game.moves = demoMoves;
+
+      game.resignPlayer(game.players[1]);
+
+      game.players[0].resigned.should.be.false();
+      game.players[1].resigned.should.be.true();
+      game.over.should.be.true();
+    });
   });
 
   describe('scoreless ending', function() {
-    // TODO: look up rules
-    // If there's x number of scoreless moves, the game ends
-    it(`happenz`);
+    it(`Only happens if bag is empty`, function() {
+      const game = twoPlayerGame();
+      game.moves = demoMoves;
+
+      game.skipTurn();
+      game.skipTurn();
+
+      game.over.should.be.false();
+    });
+
+    it(`Only happens if each player skips`, function() {
+      const game = twoPlayerGame();
+      game.moves = demoMoves;
+      game.letterBag = '';
+
+      game.skipTurn();
+
+      game.over.should.be.false();
+    });
+
+    it(`Happens & score doesn't change`, function() {
+      const game = twoPlayerGame();
+      const p1Score = game.players[0].score;
+      const p2Score = game.players[1].score;
+      game.moves = demoMoves;
+      game.letterBag = '';
+
+      game.skipTurn();
+      game.skipTurn();
+
+      game.players[0].score.should.equal(p1Score);
+      game.players[1].score.should.equal(p2Score);
+      game.over.should.be.true();
+    });
   });
 });
 
