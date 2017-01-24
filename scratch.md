@@ -4,12 +4,25 @@ At some point we'll need an indeterminate state for login & games list while JS 
 
 * Login status
 * Title
-* Active games
 * If not logged in:
   * Log in with Twitter
 * If logged in:
   * New game
 * New local game
+* Active games
+
+## Server load
+
+* Server render everything but games list
+* Client adds games from idb & root object
+
+## Service worker load
+
+* SW render everything but games list
+* Client render from IDB
+* Update IDB from network, update page
+
+We're going to need a spinner or something
 
 # New local game
 
@@ -24,30 +37,14 @@ Naivgation could just be real? Yeah, real at first.
 * Letters
 * Play & shuffle
 
-# New remote game
+* Next up, make idb version of game storage?
 
-If a remote game is started, let the player make a move before telling them how to tell the other player.
-Also don't ask for notification permission until after the first move.
+# Game urls
 
-# Storage
-
-* Remaining letter bag - server only
-* Players
-  * Score
-  * Letters - server only (unless this player)
-  * twitter id
-* Is local game?
-* Is game active?
-* Who resigned (if any)
-* Moves played
-  * Placements (empty if skipped or swapped)
-  * Number of letters in bag remaining (so it can be tracked if there is a skip from each player)
-
-Serverside "game" methods:
-* Should the game end now? Eg, a round of skips with an empty bag, or player has no letters remaining + empty bag
-* Swap letters from player
-* Remove letters from player
-* Give letters to player from bag
-
-
-Store "friends" on client, which is anyone the user has started a game with.
+/name-vs-name/
+  Could get ambiguous if twitter usernames contain vs
+/name/vs/name/
+  How to tell the difference between old games and the latest?
+  What if names are the other way around? Could sort alphabetically
+/games/{id}
+  Not a great looking URL

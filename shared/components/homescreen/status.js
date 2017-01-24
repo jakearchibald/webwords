@@ -16,7 +16,7 @@
 */
 import {h} from 'preact';
 
-import BoundComponent from './bound-component';
+import BoundComponent from '../utils/bound-component';
 
 export default class Status extends BoundComponent {
   constructor(props) {

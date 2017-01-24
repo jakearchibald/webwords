@@ -21,7 +21,7 @@ import render from 'preact-render-to-string';
 
 import promisify from './promisify';
 import indexTemplate from './templates/index';
-import App from './shared/components/app';
+import Homescreen from './shared/components/homescreen';
 import {escapeJSONString} from './utils';
 
 const readFile = promisify(fs, 'readFile');
@@ -42,15 +42,19 @@ function getInitialState(req) {
   return initialState;
 }
 
+export function initialState(req, res) {
+  res.json(getInitialState(req));
+}
+
 export async function home(req, res) {
   const initialState = getInitialState(req);
 
   res.send(
     indexTemplate({
-      content: render(<App initialState={initialState} server={true}/>),
+      content: render(<Homescreen user={initialState.user} server={true}/>),
       title: 'Web Words',
       inlineCss: await readFile(`${__dirname}/static/css/index-inline.css`),
-      scripts: ['/static/js/main.js'],
+      scripts: ['/static/js/homescreen.js'],
       lazyCss: ['/static/css/index.css'],
       initialState: escapeJSONString(JSON.stringify(initialState))
     })

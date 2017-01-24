@@ -14,15 +14,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import {h, render} from 'preact';
-import regeneratorRuntime from 'regenerator-runtime/runtime';
-import App from '../../../shared/components/app';
-// for node compatibility
-self.global = self;
-// so we don't have to keep importing it
-self.regeneratorRuntime = regeneratorRuntime;
-
-function loadScript(url) {
+export function loadScript(url) {
   return new Promise((resolve, reject) => {
     const script = document.createElement('script');
     script.onload = () => resolve();
@@ -32,7 +24,7 @@ function loadScript(url) {
   });
 }
 
-function loadStyle(url) {
+export function loadStyle(url) {
   return new Promise((resolve, reject) => {
     const link = document.createElement('link');
     link.onload = () => resolve();
@@ -42,17 +34,3 @@ function loadStyle(url) {
     document.head.appendChild(link);
   });
 }
-
-const loadings = []; 
-
-//if (!window.fetch) loadings.push(loadScript('/static/js/polyfills.js'));
-Array.from(document.querySelectorAll('.lazy-css')).forEach(link => {
-  loadings.push(loadStyle(link.href));
-});
-
-Promise.all(loadings).then(() => {
-  const initialState = window.initialState;
-  const main = document.querySelector('.main-content');
-  const root = document.querySelector('.main-content > *');
-  render(<App initialState={initialState}/>, main, root);
-});

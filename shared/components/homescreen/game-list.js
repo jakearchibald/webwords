@@ -16,27 +16,23 @@
 */
 import {h} from 'preact';
 
-import BoundComponent from './bound-component';
+import BoundComponent from '../utils/bound-component';
 
-export default class NewGame extends BoundComponent {
-  constructor(props) {
-    super(props);
-  }
-  render({loggedIn, server}, {}) {
+export default class GameList extends BoundComponent {
+  render({games}, {}) {
     return (
       <div>
-        {loggedIn ?
-          server ?
-            <div>Loading</div>
-            :
-            <div>TODO: new game</div>
+        <h1>Games</h1>
+        {games.length ?
+          <ol>
+            {games.map(game =>
+              <li>
+                GAME
+              </li>
+            )}
+          </ol>
           :
-          <div><a href="/user/login">Log in</a></div>
-        }
-        {server ?
-          <div>Loading</div>
-          :
-          <div>TODO: new local game</div>
+          <p>No games yet.</p>
         }
       </div>
     );

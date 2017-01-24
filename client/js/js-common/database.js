@@ -14,13 +14,10 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import express from 'express';
-import {home, initialState} from './views';
+import idb from 'idb';
 
-export const routes = express.Router({
-  caseSensitive: true,
-  strict: true
+export default idb.open('webwords', 1, db => {
+  db.createObjectStore('keyval');
+  const games = db.createObjectStore('games', {keyPath: '_id'});
+  games.createIndex('importance', ['over', 'started']);
 });
-
-routes.get('/', home);
-routes.get('/initial-state.json', initialState);

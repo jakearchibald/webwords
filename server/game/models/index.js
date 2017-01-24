@@ -28,7 +28,7 @@ const gameSchema = mongoose.Schema({
       isJoker: Boolean
     }],
     bagWasEmpty: {type: Boolean, required: true},
-    date: {type: Date, default: Date.now}
+    date: Date
   }],
   players: [{
     score: Number,

@@ -14,13 +14,29 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import express from 'express';
-import {home, initialState} from './views';
+import Game from './game';
+import {set as keyValSet, get as keyValGet} from './key-val';
 
-export const routes = express.Router({
-  caseSensitive: true,
-  strict: true
-});
+export function putState(state) {
+  const promises = [];
 
-routes.get('/', home);
-routes.get('/initial-state.json', initialState);
+  if (state.user) {
+    promises.push(keyValSet('user', state.user))
+  }
+
+  if (state.games) {
+    promises.push(Game.putMany(state.games));
+  }
+
+  return Promise.all(promises);
+}
+
+export async function getState() {
+  const userState = keyValGet('user');
+  const gameState = Game.getByImportance();
+
+  return {
+    user: await userState,
+    games: await gameState
+  };
+}

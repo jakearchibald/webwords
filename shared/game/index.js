@@ -74,6 +74,7 @@ export default class Game {
     this.letterBag = defaultLetterBag();
     this.over = false;
     this.started = Date.now();
+    this.moves = [];
 
     for (const player of this.players) {
       player.letters = '';
@@ -242,7 +243,7 @@ export default class Game {
 // Proxy to storage
 const propsToProxy = [
   'letterBag', 'over', 'started',
-  'moves', 'players'
+  'moves', 'players', '_id', 'local'
 ];
 
 for (const prop of propsToProxy) {
