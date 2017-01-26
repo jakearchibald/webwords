@@ -40,22 +40,4 @@ const gameSchema = mongoose.Schema({
 
 gameSchema.index({'players.user': 1, over: 1, started: 1});
 
-
-/*gameSchema.methods.shouldNaturallyEnd = function() {
-  // Can't end while there's letters in the letter bag
-  if (this.letterBag) return false;
-
-  // If a player has no letters left, it's over
-  if (this.players.some(player => !player.letters)) return true;
-
-  // Game can't end naturally until each player has played
-  if (this.moves.length < this.players.length) return false;
-  
-  // If every player has skipped while the bag was empty, it's over
-  const playersLastMove = this.moves.slice(-this.players.length);
-  return playersLastMove
-    .every(move => move.placements.length == 0 && move.bagWasEmpty);
-  
-};*/
-
 export const Game = mongoose.model('Game', gameSchema);

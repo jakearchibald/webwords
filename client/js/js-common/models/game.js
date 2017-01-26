@@ -67,7 +67,13 @@ export default class Game {
   toObject() {
     const obj = {};
     for (const field of fields) {
-      obj[field] = this[field];
+      if (field == 'over') {
+        // This needs to be a number for IDB indexing.
+        obj[field] = 0 + this[field];
+      }
+      else {
+        obj[field] = this[field];
+      }
     }
     return obj;
   }

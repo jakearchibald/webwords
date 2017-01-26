@@ -19,7 +19,7 @@ import {h} from 'preact';
 import Homescreen from '../../../shared/components/homescreen';
 import BoundComponent from '../../../shared/components/utils/bound-component';
 import Game from '../../../shared/game';
-import {putState} from '../js-common/models';
+import {put as putState, get as getState} from './initial-state';
 import GameStorage from '../js-common/models/game';
 
 export default class Root extends BoundComponent {
@@ -27,9 +27,9 @@ export default class Root extends BoundComponent {
     super(props);
     this.state = props.initialState;
 
-    if (props.stateStale) this.updateInitialState();
+    if (props.stateStale) this.updateStateFromNetwork();
   }
-  async updateInitialState() {
+  async updateStateFromNetwork() {
     // TODO: set updating state
     try {
       const response = await fetch('/initial-state.json', {
@@ -45,10 +45,15 @@ export default class Root extends BoundComponent {
       // TODO: unset updating state
     }
   }
+  async updateStateFromStorage() {
+    this.setState(await getState());
+  }
   onNewLocalGame() {
     const game = new Game(GameStorage.newLocal());
     game.init();
     game.storage.save();
+    // TODO: just go straight to new game
+    this.updateStateFromStorage();
   }
   render(props, state) {
     return <Homescreen

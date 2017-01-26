@@ -14,29 +14,20 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import Game from './game';
-import {set as keyValSet, get as keyValGet} from './key-val';
+import regeneratorRuntime from 'regenerator-runtime/runtime';
 
-export function putState(state) {
-  const promises = [];
+import {loadScript, loadStyle} from '../js-common/utils';
 
-  if (state.user) {
-    promises.push(keyValSet('user', state.user))
-  }
+// for node compatibility
+self.global = self;
+// so we don't have to keep importing it
+self.regeneratorRuntime = regeneratorRuntime;
 
-  if (state.games) {
-    promises.push(Game.putMany(state.games));
-  }
+const loadings = [];
 
-  return Promise.all(promises);
-}
+//if (!window.fetch) loadings.push(loadScript('/static/js/polyfills.js'));
+Array.from(document.querySelectorAll('.lazy-css')).forEach(link => {
+  loadings.push(loadStyle(link.href));
+});
 
-export async function getState() {
-  const userState = keyValGet('user');
-  const gameState = Game.getByImportance();
-
-  return {
-    user: await userState,
-    games: await gameState
-  };
-}
+export default Promise.all(loadings);

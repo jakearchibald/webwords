@@ -14,30 +14,29 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import {h} from 'preact';
+import Game from '../js-common/models/game';
+import {set as keyValSet, get as keyValGet} from '../js-common/models/key-val';
 
-import BoundComponent from '../utils/bound-component';
+export function put(state) {
+  const promises = [];
 
-export default class GameList extends BoundComponent {
-  render({games}, {}) {
-    return (
-      <div>
-        <h1>Games</h1>
-        {games.length ?
-          <ol>
-            {games.map(game =>
-              <li>
-                <a href={`/game/${game.local ? 'local-' : ''}${game._id}`}>
-                  {game.local && 'Local '}
-                  game
-                </a>
-              </li>
-            )}
-          </ol>
-          :
-          <p>No games yet.</p>
-        }
-      </div>
-    );
+  if (state.user) {
+    promises.push(keyValSet('user', state.user))
   }
+
+  if (state.games) {
+    promises.push(Game.putMany(state.games));
+  }
+
+  return Promise.all(promises);
+}
+
+export async function get() {
+  const userState = keyValGet('user');
+  const gameState = Game.getByImportance();
+
+  return {
+    user: await userState,
+    games: await gameState
+  };
 }

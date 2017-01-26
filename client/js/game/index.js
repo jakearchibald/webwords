@@ -16,8 +16,8 @@
 */
 import {h, render} from 'preact';
 
-import dependenciesReady from '../js-common/load-dependencies';
 import Root from './root';
+import dependenciesReady from '../js-common/load-dependencies';
 import {put as putState, get as getState} from './initial-state';
 
 dependenciesReady.then(async () => {
@@ -29,6 +29,8 @@ dependenciesReady.then(async () => {
   }
 
   initialState = await getState();
+
+  // TODO: if game is local and initialState is not null, state is not stale
 
   const main = document.querySelector('.main-content');
   const root = main.firstElementChild;

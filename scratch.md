@@ -24,11 +24,7 @@ At some point we'll need an indeterminate state for login & games list while JS 
 
 We're going to need a spinner or something
 
-# New local game
-
-Create entry in DB for game
-Navigate to game (each game should have its own url, ideally /vs-{name}/, which would be local-1 etc for local games)
-Naivgation could just be real? Yeah, real at first.
+# Game
 
 * Back
 * Players and score
@@ -37,7 +33,17 @@ Naivgation could just be real? Yeah, real at first.
 * Letters
 * Play & shuffle
 
-* Next up, make idb version of game storage?
+## Loading
+
+Local games should have local at start
+
+* Server render (empty board if local, full board otherwise)
+  * Service worker may render empty board, or prerendered board (versioned)
+* If not local & logged out, render invite screen
+* Look for state on window, if it's there, assume fresh
+* If no state, try and get from database, assume stale
+* If no data, or stale, get from network
+
 
 # Game urls
 
