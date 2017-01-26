@@ -27,7 +27,7 @@ export default class GameList extends BoundComponent {
           <ol>
             {games.map(game =>
               <li>
-                <a href={`/game/${game.local ? 'local-' : ''}${game._id}`}>
+                <a href={`/games/${game.local ? 'local-' : ''}${game._id}/`}>
                   {game.local && 'Local '}
                   game
                 </a>

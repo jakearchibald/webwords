@@ -36,6 +36,7 @@ import {h} from 'preact';
 import render from 'preact-render-to-string';
 
 import indexTemplate from '../templates/index';
+import Game from '../shared/components/game';
 import {escapeJSONString, promisify} from '../utils';
 
 const readFile = promisify(fs, 'readFile');
@@ -47,7 +48,7 @@ export function initialState(req, res) {
 export async function localGame(req, res) {
   res.send(
     indexTemplate({
-      content: 'local game',
+      content: render(<Game/>),
       title: 'Web Words',
       inlineCss: await readFile(`${__dirname}/../static/css/game-inline.css`),
       scripts: ['/static/js/game.js'],

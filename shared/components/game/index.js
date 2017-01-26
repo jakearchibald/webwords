@@ -14,12 +14,17 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import express from 'express';
-import {localGame} from './views';
+import {h} from 'preact';
 
-export const routes = express.Router({
-  caseSensitive: true,
-  strict: true
-});
+import BoundComponent from '../utils/bound-component';
 
-routes.get('/local-:id/', localGame);
+export default class App extends BoundComponent {
+  constructor(props) {
+    super(props);
+  }
+  render({foo}) {
+    return (
+      <div>Local game from component</div>
+    );
+  }
+}

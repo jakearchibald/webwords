@@ -79,7 +79,7 @@ router.use(multer().none());
 // Routes:
 router.use('/', homeRoutes);
 router.use('/user', userRoutes);
-router.use('/game', gameRoutes);
+router.use('/games', gameRoutes);
 
 app.use(router);
 
