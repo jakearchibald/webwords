@@ -17,22 +17,14 @@
 import {h} from 'preact';
 
 import BoundComponent from '../utils/bound-component';
-import Players from './players';
 
-export default class App extends BoundComponent {
+export default class Players extends BoundComponent {
   constructor(props) {
     super(props);
   }
-  render({game}) {
+  render({players, currentPlayer, local}) {
     return (
-      <div>
-        <div>TODO: back button</div>
-        {game ?
-          <Players players={game.players} currentPlayer={game.currentPlayer} local={game.local} />
-          :
-          <Players/>
-        }
-      </div>
+      <div>Players {players ? 'yay' : 'nay'}</div>
     );
   }
 }

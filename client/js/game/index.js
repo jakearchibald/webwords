@@ -16,8 +16,10 @@
 */
 import {h, render} from 'preact';
 
-import Root from './root';
 import dependenciesReady from '../js-common/load-dependencies';
+import GameStorage from '../js-common/models/game';
+import Game from '../../../shared/game';
+import Root from './root';
 import {put as putState, get as getState} from './initial-state';
 
 dependenciesReady.then(async () => {
@@ -25,12 +27,16 @@ dependenciesReady.then(async () => {
   let stateStale = !initialState;
 
   if (initialState) {
+    // Upgrade game to object
+    if (initialState.game) {
+      initialState.game = new Game(new GameStorage(initialState.game));
+    }
+    
     putState(initialState);
   }
-
-  initialState = await getState();
-
-  // TODO: if game is local and initialState is not null, state is not stale
+  else {
+    initialState = await getState();
+  }
 
   const main = document.querySelector('.main-content');
   const root = main.firstElementChild;
