@@ -30,6 +30,7 @@ import {production} from './utils';
 
 import {routes as homeRoutes} from './routes';
 import {routes as userRoutes} from './user/routes';
+import {routes as gameRoutes} from './game/routes';
 import {user as userMiddleware} from './user/middleware';
 
 const app = express();
@@ -78,6 +79,7 @@ router.use(multer().none());
 // Routes:
 router.use('/', homeRoutes);
 router.use('/user', userRoutes);
+router.use('/game', gameRoutes);
 
 app.use(router);
 

@@ -16,3 +16,19 @@
 */
 @import 'utils';
 @import 'global';
+
+// tmp styles
+.board {
+  td {
+    width: 35px;
+    height: 35px;
+    text-align: center;
+    border: 1px solid #ccc;
+    color: #ccc;
+
+    &.placement {
+      color: #000;
+      background: #fbeacf;
+    }
+  }
+}

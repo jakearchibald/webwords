@@ -252,6 +252,7 @@ function createScriptTask(src, dest) {
 
 const browserScripts = [
   {src: './client/js/homescreen/index.js', dest: './build/static/js'},
+  //{src: './client/js/game/index.js', dest: './build/static/js'},
   {src: './client/js/polyfills/index.js', dest: './build/static/js'}
 ];
 

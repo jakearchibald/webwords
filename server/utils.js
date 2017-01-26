@@ -30,3 +30,21 @@ export function escapeJSONString(string) {
 }
 
 export const production = process.env.NODE_ENV == 'production';
+
+export function promisify(objOrFunction, methodName) {
+  const func = methodName ?
+    objOrFunction[methodName].bind(objOrFunction) :
+    objOrFunction;
+
+  return function(...args) {
+    return new Promise((resolve, reject) => {
+      func(...args, function(err, result) {
+        if (err) {
+          reject(err);
+          return;
+        }
+        resolve(result);
+      });
+    });
+  };
+}

@@ -19,10 +19,9 @@ import fs from 'fs';
 import {h} from 'preact';
 import render from 'preact-render-to-string';
 
-import promisify from './promisify';
 import indexTemplate from './templates/index';
 import Homescreen from './shared/components/homescreen';
-import {escapeJSONString} from './utils';
+import {escapeJSONString, promisify} from './utils';
 
 const readFile = promisify(fs, 'readFile');
 
