@@ -14,6 +14,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
+/* eslint-env node */
 const path = require('path');
 const gulp = require('gulp');
 const gutil = require('gulp-util');
@@ -35,6 +36,7 @@ const rollup = require('rollup-stream');
 const rollupBabel = require('rollup-plugin-babel');
 const nodeResolve = require('rollup-plugin-node-resolve');
 const commonjs = require('rollup-plugin-commonjs');
+const onExit = require('signal-exit')
 
 const createIndexedDictionary = require('./create-indexed-dictionary');
 
@@ -96,17 +98,9 @@ for (const process of [serverProcess, databaseProcess]) {
 process.stdin.resume();
 
 // shut down gracefully
-process.on('SIGINT', () => {
-  serverProcess.stop(() => {
-    databaseProcess.stop(() => {
-      process.exit();
-    });
-  });
-});
-
-process.on('uncaughtException', () => {
-  serverProcess.stop();
-  databaseProcess.stop();
+onExit(() => {
+  serverProcess.child && serverProcess.child.kill();
+  databaseProcess.child && databaseProcess.child.kill();
 });
 
 // TASKS:
@@ -240,6 +234,9 @@ function createScriptTask(src, dest) {
       ]
     }).on('bundle', function(bundle) {
       cache = bundle;
+    }).on('error', function(err) {
+      gutil.log(err);
+      this.emit('end');
     }).pipe(source('index.js', parsedPath.dir))
       .pipe(buffer())
       .pipe(sourcemaps.init({loadMaps: true}))
