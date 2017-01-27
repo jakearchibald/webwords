@@ -98,8 +98,8 @@ export default class Zoomer extends BoundComponent {
     window.removeEventListener('touchend', this.onTouchEnd);
 
     // Adjust transform and scrolling so whole element can be scrolled to
-    const outerBounds = this.outerEl.getBoundingClientRect();
-    const innerBounds = this.innerEl.getBoundingClientRect();
+    let outerBounds = this.outerEl.getBoundingClientRect();
+    let innerBounds = this.innerEl.getBoundingClientRect();
     const yOffset = innerBounds.top - outerBounds.top;
     const xOffset = innerBounds.left - outerBounds.left;
 
@@ -107,8 +107,21 @@ export default class Zoomer extends BoundComponent {
       this.innerScale * (this.endPinchDistance / this.startPinchDistance),
       this.innerMinScale
     );
-    this.innerTranslateX = 0;
-    this.innerTranslateY = 0;
+
+    this.updateInnerPosition();
+
+    outerBounds = this.outerEl.getBoundingClientRect();
+    innerBounds = this.innerEl.getBoundingClientRect();
+
+    // Center it if smaller than parent
+    this.innerTranslateX = Math.max(
+      (outerBounds.width - innerBounds.width) / 2,
+      0
+    );
+    this.innerTranslateY = Math.max(
+      (outerBounds.height - innerBounds.height) / 2,
+      0
+    );
 
     this.updateInnerPosition();
 
