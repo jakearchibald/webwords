@@ -41,18 +41,38 @@ import {escapeJSONString, promisify} from '../utils';
 
 const readFile = promisify(fs, 'readFile');
 
-export function initialState(req, res) {
+function getInitialState(req) {
+  const initialState = {
+    user: null,
+    game: null
+  };
+
+  if (req.user) {
+    initialState.user = {
+      twitterHandle: req.user.twitterHandle,
+      name: req.user.name,
+      avatarUrl: req.user.avatarUrl
+    };
+  }
+
+  return initialState;
+}
+
+export async function initialState(req, res) {
   res.json(getInitialState(req));
 }
 
 export async function localGame(req, res) {
+  const initialState = getInitialState(req);
+
   res.send(
     indexTemplate({
-      content: render(<Game/>),
+      content: render(<Game server={true}/>),
       title: 'Web Words',
       inlineCss: await readFile(`${__dirname}/../static/css/game-inline.css`),
       scripts: ['/static/js/game.js'],
-      lazyCss: ['/static/css/game.css']
+      lazyCss: ['/static/css/game.css'],
+      initialState: escapeJSONString(JSON.stringify(initialState))
     })
   );
 }

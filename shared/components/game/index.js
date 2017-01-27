@@ -18,20 +18,42 @@ import {h} from 'preact';
 
 import BoundComponent from '../utils/bound-component';
 import Players from './players';
+import BoardComponent from './board';
+import Zoomer from './zoomer';
+import PlayerLetters from './player-letters';
+import Board from '../../game/board';
 
 export default class App extends BoundComponent {
   constructor(props) {
     super(props);
   }
-  render({game}) {
+  getThisPlayer() {
+    const game = this.props.game;
+
+    if (!game) return null;
+    if (game.local) return game.currentPlayer;
+
+    throw Error('TODO: implementent non-local games');
+  }
+  render({game, server}) {
+    const board = game ? game.createBoard() : new Board();
+    const thisPlayer = this.getThisPlayer();
+
     return (
-      <div>
-        <div>TODO: back button</div>
-        {game ?
-          <Players players={game.players} currentPlayer={game.currentPlayer} local={game.local} />
-          :
-          <Players/>
-        }
+      <div class="game">
+        <div class="action-row">
+          {game ?
+            <Players players={game.players} currentPlayer={game.currentPlayer} local={game.local} />
+            :
+            <Players/>
+          }
+        </div>
+        <Zoomer>
+          {!server &&
+            <BoardComponent board={board}/>
+          }
+        </Zoomer>
+        <PlayerLetters letters={thisPlayer && thisPlayer.letters}/>
       </div>
     );
   }

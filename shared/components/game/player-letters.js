@@ -14,7 +14,23 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-@import 'utils';
-@import 'global';
-@import 'game/layout';
-@import 'game/board';
+import {h} from 'preact';
+
+import BoundComponent from '../utils/bound-component';
+
+export default class PlayerLetters extends BoundComponent {
+  constructor(props) {
+    super(props);
+  }
+  render({letters}) {
+    if (!letters) letters = [];
+
+    return (
+      <ul>
+        {[...letters].map(letter => 
+          <li>{letter == ' ' ? 'wildcard' : letter}</li>
+        )}
+      </ul>
+    );
+  }
+}

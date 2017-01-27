@@ -18,6 +18,7 @@ import {h} from 'preact';
 
 import BoundComponent from '../../../shared/components/utils/bound-component';
 import Game from '../../../shared/components/game';
+import {put as putState} from './initial-state';
 
 export default class Root extends BoundComponent {
   constructor(props) {
@@ -27,13 +28,11 @@ export default class Root extends BoundComponent {
     if (props.stateStale) this.updateStateFromNetwork();
   }
   async updateStateFromNetwork() {
-    console.log('updateStateFromNetwork');
-    return;
-    // TODO: set updating state
     try {
-      const response = await fetch('/initial-state.json', {
+      const response = await fetch('initial-state.json', {
         credentials: 'include'
       });
+
       const data = await response.json();
       this.setState(data);
       putState(data);
@@ -44,12 +43,10 @@ export default class Root extends BoundComponent {
       // TODO: unset updating state
     }
   }
-  async updateStateFromStorage() {
-    this.setState(await getState());
-  }
-  render(props, {game}) {
+  render(props, {game, user}) {
     return <Game
       game={game}
+      user={user}
     />
   }
 }

@@ -34,7 +34,8 @@ dependenciesReady.then(async () => {
     
     putState(initialState);
   }
-  else {
+
+  if (!(initialState && initialState.game)) {
     initialState = await getState();
   }
 
