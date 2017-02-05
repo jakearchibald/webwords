@@ -16,6 +16,8 @@
 */
 import {h} from 'preact';
 
+import TileComponent from './tile';
+import Tile from '../../game/tile';
 import BoundComponent from '../utils/bound-component';
 
 export default class PlayerLetters extends BoundComponent {
@@ -23,12 +25,13 @@ export default class PlayerLetters extends BoundComponent {
     super(props);
   }
   render({letters}) {
-    if (!letters) letters = [];
+    if (!letters) letters = '';
+    const tiles = [...letters].map(l => new Tile(l, l == ' '));
 
     return (
-      <ul>
-        {[...letters].map(letter => 
-          <li>{letter == ' ' ? 'wildcard' : letter}</li>
+      <ul class="player-letters">
+        {tiles.map(tile =>
+          <li><TileComponent tile={tile}/></li>
         )}
       </ul>
     );

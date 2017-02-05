@@ -54,3 +54,33 @@ Local games should have local at start
   What if names are the other way around? Could sort alphabetically
 /games/{id}
   Not a great looking URL
+
+# Moving tiles around
+
+Tiles may be "movable"
+Non-movable tiles have been placed on a previous turn
+All player tiles are "movable"
+Top component has player tiles and maybe a "move"
+Move tiles should be removed from player's set before handing to player tiles component
+Board gets a move
+
+Game adds listeners to board and player tiles, delegates for tiles
+Tile needs to pop to outer-level when being dragged - hide original and create new one?
+Game must manage the 
+
+
+const x = mat2d.create();
+const p = vec2.create();
+p[0] = 10;
+p[1] = 10;
+
+const backToOrigin = vec2.create();
+backToOrigin[0] = -100;
+backToOrigin[1] = -20;
+
+mat2d.multiplyScalar(x, x, 2);
+mat2d.translate(x, x, backToOrigin);
+
+vec2.transformMat2d(p, p, x);
+
+console.log(x);

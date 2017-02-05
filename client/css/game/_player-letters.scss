@@ -14,20 +14,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-html {
-  font-family: sans-serif;
-  color: #000;
-  font-size: 15px;
-  line-height: 1.9;
-  @media screen and (min-width: $mobile-boundry) {
-    font-size: 16px;
-  }
-  height: 100%;
-}
-
-body {
+.player-letters {
+  display: flex;
+  list-style: none;
   margin: 0;
   padding: 0;
-  height: 100%;
-  -webkit-text-size-adjust: 100%;
+  justify-content: center;
+
+  li {
+    display: block;
+    margin: 0 10px;
+  }
 }

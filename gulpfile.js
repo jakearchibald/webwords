@@ -217,6 +217,7 @@ function createScriptTask(src, dest) {
       sourceMap: true,
       cache,
       format: 'iife',
+      context: 'window',
       plugins: [
         nodeResolve({
           preferBuiltins: false,

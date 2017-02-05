@@ -15,6 +15,7 @@
 * limitations under the License.
 */
 import {h} from 'preact';
+import {mat2d, vec2} from 'gl-matrix';
 
 import BoundComponent from '../utils/bound-component';
 
@@ -34,6 +35,8 @@ export default class Zoomer extends BoundComponent {
     this.innerScale = 1;
     this.innerTranslateX = 0;
     this.innerTranslateY = 0;
+    this.innerNaturalWidth = 0;
+    this.innerNaturalHeight = 0;
     this.pinching = false;
     
     // Start of pinch
@@ -68,22 +71,69 @@ export default class Zoomer extends BoundComponent {
     window.addEventListener('touchmove', this.onTouchMove);
     window.addEventListener('touchend', this.onTouchEnd);
   }
+  // I'm so sorry about the contents of this function.
+  // I don't really know what I'm doing.
   onTouchMove(event) {
-    event.preventDefault();
+    const outerBounds = this.outerEl.getBoundingClientRect();
+
     const avgX = (event.touches[0].pageX + event.touches[1].pageX) / 2;
     const avgY = (event.touches[0].pageY + event.touches[1].pageY) / 2;
     const distance = getTouchDistance(event.touches[0], event.touches[1]);
     const distanceDiff = distance / this.startPinchDistance;
+    // apply a minimum scale
+    const scaleAmount = Math.max(distanceDiff, this.innerMinScale / this.innerScale);
 
     this.endPinchDistance = distance;
 
-    // I can't do matrix maths so I'll let the browser do it for me:
-    this.innerEl.style.transform = 
-      `translate(${avgX}px, ${avgY}px) ` +
-      `scale(${distanceDiff}) ` +
-      `translate(${-this.startPinchX}px, ${-this.startPinchY}px) ` +
-      `translate(${this.innerTranslateX}px, ${this.innerTranslateY}px) ` +
-      `scale(${this.innerScale})`;
+    const matrix = mat2d.create();
+
+    mat2d.translate(matrix, matrix, vec2.fromValues(avgX, avgY));
+    mat2d.scale(matrix, matrix, vec2.fromValues(scaleAmount, scaleAmount));
+    mat2d.translate(matrix, matrix, vec2.fromValues(-this.startPinchX, -this.startPinchY));
+    mat2d.translate(matrix, matrix, vec2.fromValues(this.innerTranslateX, this.innerTranslateY));
+    mat2d.scale(matrix, matrix, vec2.fromValues(this.innerScale, this.innerScale));
+
+    const topLeft = vec2.create();
+    const bottomRight = vec2.fromValues(this.innerNaturalWidth, this.innerNaturalHeight);
+
+    vec2.transformMat2d(topLeft, topLeft, matrix);
+    vec2.transformMat2d(bottomRight, bottomRight, matrix);
+
+    const newWidth = bottomRight[0] - topLeft[0];
+    const newHeight = bottomRight[1] - topLeft[1];
+
+    let xTranslate = 0;
+    let yTranslate = 0;
+
+    // Are we translating out of the boundaries? If so, fix it up.
+    if (newWidth < outerBounds.width) {
+      xTranslate = -topLeft[0] + (outerBounds.width - newWidth) / 2;
+    }
+    else if (topLeft[0] > 0) {
+      xTranslate = -topLeft[0];
+    }
+    else if (bottomRight[0] < outerBounds.width) {
+      xTranslate = outerBounds.width - bottomRight[0];
+    }
+
+    if (newHeight < outerBounds.height) {
+      yTranslate = -topLeft[1] + (outerBounds.height - newHeight) / 2;
+    }
+    else if (topLeft[1] > 0) {
+      yTranslate = -topLeft[1];
+    }
+    else if (bottomRight[1] < outerBounds.height) {
+      yTranslate = outerBounds.height - bottomRight[1];
+    }
+
+    // I want to apply this translation as if it were the first operation in the matrix.
+    // This seems to do the trick, but there must be an easier way:
+    const translate = vec2.fromValues(-xTranslate, -yTranslate);
+    mat2d.invert(matrix, matrix);
+    mat2d.translate(matrix, matrix, translate);
+    mat2d.invert(matrix, matrix);
+
+    this.innerEl.style.transform = `matrix(${matrix[0]}, ${matrix[1]}, ${matrix[2]}, ${matrix[3]}, ${matrix[4]}, ${matrix[5]})`;
   }
   onTouchEnd(event) {
     // Bail if we've still got the original two touches
@@ -98,30 +148,14 @@ export default class Zoomer extends BoundComponent {
     window.removeEventListener('touchend', this.onTouchEnd);
 
     // Adjust transform and scrolling so whole element can be scrolled to
-    let outerBounds = this.outerEl.getBoundingClientRect();
-    let innerBounds = this.innerEl.getBoundingClientRect();
+    const outerBounds = this.outerEl.getBoundingClientRect();
+    const innerBounds = this.innerEl.getBoundingClientRect();
     const yOffset = innerBounds.top - outerBounds.top;
     const xOffset = innerBounds.left - outerBounds.left;
 
-    this.innerScale = Math.max(
-      this.innerScale * (this.endPinchDistance / this.startPinchDistance),
-      this.innerMinScale
-    );
-
-    this.updateInnerPosition();
-
-    outerBounds = this.outerEl.getBoundingClientRect();
-    innerBounds = this.innerEl.getBoundingClientRect();
-
-    // Center it if smaller than parent
-    this.innerTranslateX = Math.max(
-      (outerBounds.width - innerBounds.width) / 2,
-      0
-    );
-    this.innerTranslateY = Math.max(
-      (outerBounds.height - innerBounds.height) / 2,
-      0
-    );
+    this.innerScale = Math.max(this.innerScale * (this.endPinchDistance / this.startPinchDistance), this.innerMinScale);
+    this.innerTranslateX = Math.max(xOffset, 0);
+    this.innerTranslateY = Math.max(yOffset, 0);
 
     this.updateInnerPosition();
 
@@ -157,17 +191,20 @@ export default class Zoomer extends BoundComponent {
     this.updateInnerPosition();
   }
   componentDidMount() {
+    const innerBounds = this.innerEl.getBoundingClientRect();
+
+    this.innerNaturalWidth = innerBounds.width;
+    this.innerNaturalHeight = innerBounds.height;
+    
     window.addEventListener('resize', this.onResize);
-    this.outerEl.addEventListener('touchstart', this.onTouchStart);
     this.zoomToBounds();
   }
   componentDidUnmount() {
     window.removeEventListener('resize', this.onResize);
-    this.outerEl.removeEventListener('touchstart', this.onTouchStart);
   }
   render({children}) {
     return (
-      <div ref={el => this.outerEl = el} class="zoomer">
+      <div ref={el => this.outerEl = el} class="zoomer" onTouchStart={this.onTouchStart}>
         <div ref={el => this.innerEl = el} class="zoomer-inner">
           {children}
         </div>
