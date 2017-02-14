@@ -101,11 +101,12 @@ describe('Game', function() {
     });
   });
 
-  describe('#currentPlayer', function() {
+  describe('#currentPlayer & #currentPlayerIndex', function() {
     it(`returns player one if no moves have been played`, function() {
       const game = twoPlayerGame();
       game.players[0].score = 1;
       game.players[1].score = 2;
+      game.currentPlayerIndex.should.equal(0);
       game.currentPlayer.score.should.equal(1);
     });
 
@@ -121,6 +122,7 @@ describe('Game', function() {
       ];
 
       game.currentPlayer.score.should.equal(1);
+      game.currentPlayerIndex.should.equal(0);
     });
 
     it(`returns player two if it's their turn`, function() {
@@ -133,6 +135,7 @@ describe('Game', function() {
         {bagWasEmpty: false}
       ];
       game.currentPlayer.score.should.equal(2);
+      game.currentPlayerIndex.should.equal(1);
     });
   });
 

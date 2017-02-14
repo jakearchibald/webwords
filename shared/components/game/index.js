@@ -24,20 +24,16 @@ import PlayerLetters from './player-letters';
 import Board from '../../game/board';
 
 export default class App extends BoundComponent {
-  constructor(props) {
-    super(props);
-  }
   getThisPlayer() {
     const game = this.props.game;
 
     if (!game) return null;
     if (game.local) return game.currentPlayer;
 
-    throw Error('TODO: implementent non-local games');
+    throw Error('TODO: implement non-local games');
   }
-  render({game, server}) {
+  render({game, server, localPlayerTiles}) {
     const board = game ? game.createBoard() : new Board();
-    const thisPlayer = this.getThisPlayer();
 
     return (
       <div class="game">
@@ -53,7 +49,7 @@ export default class App extends BoundComponent {
             <BoardComponent board={board}/>
           }
         </Zoomer>
-        <PlayerLetters letters={thisPlayer && thisPlayer.letters}/>
+        <PlayerLetters tiles={localPlayerTiles} />
       </div>
     );
   }

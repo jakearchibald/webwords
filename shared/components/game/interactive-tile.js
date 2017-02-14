@@ -14,33 +14,18 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import {h} from 'preact';
+import { h } from 'preact';
 
-import InteractiveTile from './interactive-tile';
-import TilePlaceButton from './tile-place-button';
 import BoundComponent from '../utils/bound-component';
 
-export default class PlayerLetters extends BoundComponent {
-  constructor(props) {
-    super(props);
-  }
-  render({tiles}) {
-    if (!tiles) return <div>TODO</div>;
-
+export default class InteractiveTile extends BoundComponent {
+  render({ tile, selected, onClick }) {
     return (
-      <ul class="player-letters">
-        {tiles.map(tile =>
-          <li>
-            {tile ?
-              <InteractiveTile
-                {...tile}
-              />
-              :
-              <TilePlaceButton/>
-            }
-          </li>
-        )}
-      </ul>
+      <button
+        class={`tile interactive-tile ${selected ? 'selected' : ''}`}
+        {...{onClick}}>
+        {tile.letter}
+      </button>
     );
   }
 }

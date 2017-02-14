@@ -65,7 +65,10 @@ export default class Game {
     this.storage = storage;
   }
   get currentPlayer() {
-    return this.players[this.moves.length % this.players.length];
+    return this.players[this.currentPlayerIndex];
+  }
+  get currentPlayerIndex() {
+    return this.moves.length % this.players.length;
   }
   /**
    * Set up a new game with defaults.

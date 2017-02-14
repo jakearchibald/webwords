@@ -32,8 +32,12 @@ dependenciesReady.then(async () => {
 
   const main = document.querySelector('.main-content');
   const root = main.firstElementChild;
+  
   render(
-    <Root initialState={initialState} stateStale={stateStale}/>,
+    <Root
+      initialState={initialState} 
+      stateStale={stateStale}
+    />,
     main, root
   );
 });

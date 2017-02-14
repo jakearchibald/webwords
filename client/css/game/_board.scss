@@ -29,6 +29,18 @@
       background: #fbeacf;
     }
   }
+
+  .cell-inner {
+    position: relative;
+    height: 100%;
+  }
+
+  .action-tile {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+  }
 }
 
 .tile {

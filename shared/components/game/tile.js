@@ -19,9 +19,6 @@ import {h} from 'preact';
 import BoundComponent from '../utils/bound-component';
 
 export default class Tile extends BoundComponent {
-  constructor(props) {
-    super(props);
-  }
   render({tile}) {
     return (
       <div class="tile">{tile.letter}</div>

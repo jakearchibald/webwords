@@ -17,6 +17,7 @@
 import {h} from 'preact';
 
 import BoundComponent from '../utils/bound-component';
+import TilePlaceButton from './tile-place-button';
 
 export default class Board extends BoundComponent {
   constructor(props) {
@@ -35,9 +36,12 @@ export default class Board extends BoundComponent {
 
         row.push(
           <td>
-            {action &&
-              <div class="action-tile">{action}</div>
-            }
+            <div class="cell-inner">
+              {action &&
+                <div class="action-tile">{action}</div>
+              }
+              <TilePlaceButton/>
+            </div>
           </td>
         )
       }

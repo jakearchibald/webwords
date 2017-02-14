@@ -14,11 +14,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+.interactive-tile {
+  @extend %button-unstyle;
+}
+
 .tile {
-  width: 35px;
-  height: 35px;
+  width: 45px;
+  height: 45px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: #ffe0a1;
+}
+
+.tile-place-button {
+  @extend %button-unstyle;
+  position: absolute;
+  font-size: 0px;
+  color: rgba(0,0,0,0);
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
 }

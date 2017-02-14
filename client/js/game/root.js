@@ -18,35 +18,48 @@ import {h} from 'preact';
 
 import BoundComponent from '../../../shared/components/utils/bound-component';
 import Game from '../../../shared/components/game';
-import {put as putState} from './initial-state';
+import Tile from '../../../shared/game/tile';
 
 export default class Root extends BoundComponent {
   constructor(props) {
     super(props);
     this.state = props.initialState;
 
+    if (this.state.game.local) {
+      this.state.localPlayerIndex = this.state.game.currentPlayerIndex;
+    }
+    else {
+      throw Error('not implemented yet');
+    }
+
+    this.state.move = undefined;
+    this.state.localPlayerTiles = new Array(7).fill(undefined);
+
+    const localPlayerLetters = this.state.game.players[this.state.localPlayerIndex].letters;
+
+    [...localPlayerLetters].forEach((letter, i) => {
+      this.state.localPlayerTiles[i] = {
+        tile: new Tile(letter, letter = ' '),
+        selected: false,
+        onClick: this.onTileClick
+      };
+    });
+
     if (props.stateStale) this.updateStateFromNetwork();
   }
-  async updateStateFromNetwork() {
-    try {
-      const response = await fetch('initial-state.json', {
-        credentials: 'include'
-      });
-
-      const data = await response.json();
-      this.setState(data);
-      putState(data);
-      // TODO: unset updating state
-    }
-    catch (err) {
-      // TODO: show error
-      // TODO: unset updating state
-    }
+  onTileClick(event, ...args) {
+    //debugger;
+    console.log(event);
+    console.log('click');
   }
-  render(props, {game, user}) {
+  async updateStateFromNetwork() {
+    throw Error('not implemented yet');
+  }
+  render(props, {game, user, localPlayerTiles}) {
     return <Game
       game={game}
       user={user}
+      localPlayerTiles={localPlayerTiles}
     />
   }
 }

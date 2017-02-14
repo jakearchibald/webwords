@@ -19,9 +19,6 @@ import {h} from 'preact';
 import BoundComponent from '../utils/bound-component';
 
 export default class Players extends BoundComponent {
-  constructor(props) {
-    super(props);
-  }
   render({players, currentPlayer, local}) {
     return (
       <div>Players {players ? 'yay' : 'nay'}</div>
