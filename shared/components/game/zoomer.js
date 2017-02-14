@@ -15,13 +15,24 @@
 * limitations under the License.
 */
 import {h} from 'preact';
-import {mat2d, vec2} from 'gl-matrix';
+
+import {
+  create as mat2dCreate,
+  translate as mat2dTranslate,
+  scale as mat2dScale,
+  invert as mat2dInvert
+} from '../utils/gl-matrix/mat2d';
+import {
+  fromValues as vec2FromValues,
+  create as vec2Create,
+  transformMat2d as vec2TransformMat2d
+} from '../utils/gl-matrix/vec2';
 
 import BoundComponent from '../utils/bound-component';
 
 function getTouchDistance(t1, t2) {
-  const xDist = Math.abs(t1.pageX - t2.pageX);
-  const yDist = Math.abs(t1.pageY - t2.pageY);
+  const xDist = t1.pageX - t2.pageX;
+  const yDist = t1.pageY - t2.pageY;
 
   return Math.sqrt(xDist*xDist + yDist*yDist);
 }
@@ -53,31 +64,42 @@ export default class Zoomer extends BoundComponent {
     if (event.touches.length < 2 || this.pinching) return;
     event.preventDefault();
 
+    const outerBounds = this.outerEl.getBoundingClientRect();
+    const x1 = event.touches[0].clientX - outerBounds.left;
+    const x2 = event.touches[1].clientX - outerBounds.left;
+    const y1 = event.touches[0].clientY - outerBounds.top;
+    const y2 = event.touches[1].clientY - outerBounds.top;
+
     this.pinching = true;
     this.activeTouchIds = [...event.touches].map(t => t.identifier);
-    this.startPinchX = (event.touches[0].pageX + event.touches[1].pageX) / 2;
-    this.startPinchY = (event.touches[0].pageY + event.touches[1].pageY) / 2;
+    this.startPinchX = (x1 + x2) / 2;
+    this.startPinchY = (y1 + y2) / 2;
     this.startPinchDistance = getTouchDistance(event.touches[0], event.touches[1]);
     
     // Remove regular scrolling
     this.innerTranslateX -= this.outerEl.scrollLeft;
     this.innerTranslateY -= this.outerEl.scrollTop;
+    this.innerEl.style.willChange = 'transform';
     this.outerEl.style.overflow = 'hidden';
     this.outerEl.scrollLeft = 0;
     this.outerEl.scrollTop = 0;
 
     this.updateInnerPosition();
     
-    window.addEventListener('touchmove', this.onTouchMove);
-    window.addEventListener('touchend', this.onTouchEnd);
+    this.outerEl.addEventListener('touchmove', this.onTouchMove);
+    this.outerEl.addEventListener('touchend', this.onTouchEnd);
   }
   // I'm so sorry about the contents of this function.
   // I don't really know what I'm doing.
   onTouchMove(event) {
     const outerBounds = this.outerEl.getBoundingClientRect();
+    const x1 = event.touches[0].clientX - outerBounds.left;
+    const x2 = event.touches[1].clientX - outerBounds.left;
+    const y1 = event.touches[0].clientY - outerBounds.top;
+    const y2 = event.touches[1].clientY - outerBounds.top;
 
-    const avgX = (event.touches[0].pageX + event.touches[1].pageX) / 2;
-    const avgY = (event.touches[0].pageY + event.touches[1].pageY) / 2;
+    const avgX = (x1 + x2) / 2;
+    const avgY = (x1 + x2) / 2;
     const distance = getTouchDistance(event.touches[0], event.touches[1]);
     const distanceDiff = distance / this.startPinchDistance;
     // apply a minimum scale
@@ -85,19 +107,19 @@ export default class Zoomer extends BoundComponent {
 
     this.endPinchDistance = distance;
 
-    const matrix = mat2d.create();
+    const matrix = mat2dCreate();
 
-    mat2d.translate(matrix, matrix, vec2.fromValues(avgX, avgY));
-    mat2d.scale(matrix, matrix, vec2.fromValues(scaleAmount, scaleAmount));
-    mat2d.translate(matrix, matrix, vec2.fromValues(-this.startPinchX, -this.startPinchY));
-    mat2d.translate(matrix, matrix, vec2.fromValues(this.innerTranslateX, this.innerTranslateY));
-    mat2d.scale(matrix, matrix, vec2.fromValues(this.innerScale, this.innerScale));
+    mat2dTranslate(matrix, matrix, vec2FromValues(avgX, avgY));
+    mat2dScale(matrix, matrix, vec2FromValues(scaleAmount, scaleAmount));
+    mat2dTranslate(matrix, matrix, vec2FromValues(-this.startPinchX, -this.startPinchY));
+    mat2dTranslate(matrix, matrix, vec2FromValues(this.innerTranslateX, this.innerTranslateY));
+    mat2dScale(matrix, matrix, vec2FromValues(this.innerScale, this.innerScale));
 
-    const topLeft = vec2.create();
-    const bottomRight = vec2.fromValues(this.innerNaturalWidth, this.innerNaturalHeight);
+    const topLeft = vec2Create();
+    const bottomRight = vec2FromValues(this.innerNaturalWidth, this.innerNaturalHeight);
 
-    vec2.transformMat2d(topLeft, topLeft, matrix);
-    vec2.transformMat2d(bottomRight, bottomRight, matrix);
+    vec2TransformMat2d(topLeft, topLeft, matrix);
+    vec2TransformMat2d(bottomRight, bottomRight, matrix);
 
     const newWidth = bottomRight[0] - topLeft[0];
     const newHeight = bottomRight[1] - topLeft[1];
@@ -128,10 +150,10 @@ export default class Zoomer extends BoundComponent {
 
     // I want to apply this translation as if it were the first operation in the matrix.
     // This seems to do the trick, but there must be an easier way:
-    const translate = vec2.fromValues(-xTranslate, -yTranslate);
-    mat2d.invert(matrix, matrix);
-    mat2d.translate(matrix, matrix, translate);
-    mat2d.invert(matrix, matrix);
+    const translate = vec2FromValues(-xTranslate, -yTranslate);
+    mat2dInvert(matrix, matrix);
+    mat2dTranslate(matrix, matrix, translate);
+    mat2dInvert(matrix, matrix);
 
     this.innerEl.style.transform = `matrix(${matrix[0]}, ${matrix[1]}, ${matrix[2]}, ${matrix[3]}, ${matrix[4]}, ${matrix[5]})`;
   }
@@ -144,8 +166,8 @@ export default class Zoomer extends BoundComponent {
     ) return;
 
     this.pinching = false;
-    window.removeEventListener('touchmove', this.onTouchMove);
-    window.removeEventListener('touchend', this.onTouchEnd);
+    this.outerEl.removeEventListener('touchmove', this.onTouchMove);
+    this.outerEl.removeEventListener('touchend', this.onTouchEnd);
 
     // Adjust transform and scrolling so whole element can be scrolled to
     const outerBounds = this.outerEl.getBoundingClientRect();
@@ -159,6 +181,7 @@ export default class Zoomer extends BoundComponent {
 
     this.updateInnerPosition();
 
+    this.innerEl.style.willChange = '';
     this.outerEl.style.overflow = '';
     this.outerEl.scrollTop -= yOffset;
     this.outerEl.scrollLeft -= xOffset;
