@@ -14,27 +14,14 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import dictionaryIndex from './sowpods';
-
-function isInIndex(word) {
-  let index = dictionaryIndex;
-  let i = 0;
-
-  while (!Array.isArray(index)) {
-    index = index[word[i] || ''];
-    if (!index) return false;
-    i++;
-  }
-
-  return index.includes(word);
-}
+import wordSet from './sowpods';
 
 /**
  * @param {String} word
  * @returns {Promise<Boolean>}
  */
 export function includes(word) {
-  return Promise.resolve(isInIndex(word));
+  return Promise.resolve(wordSet.has(word));
 }
 
 /**
@@ -43,5 +30,5 @@ export function includes(word) {
  * @returns {Promise<Array<Boolean>>}
  */
 export function includesMulti(words) {
-  return Promise.resolve(words.map(isInIndex));
+  return Promise.resolve(words.map(word => wordSet.has(word)));
 }

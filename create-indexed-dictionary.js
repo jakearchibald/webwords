@@ -5,34 +5,28 @@ const PluginError = gutil.PluginError;
 const PLUGIN_NAME = 'create-indexed-dictionary';
 
 function indexWordList() {
-  const wordLookup = {};
+  let first = true;
 
   return through(
     function (chunk, enc, cb) {
       const str = chunk.toString();
       const levels = 3;
 
+      if (first) {
+        this.push('const wordSet = new Set();\n');
+        first = false;
+      }
+
       if (str.length < 2) {
         cb();
         return;
       }
 
-      let index = wordLookup;
-      let i = 0;
-
-      for (; i < (levels - 1); i++) {
-        index = index[str[i] || ''] ||
-          (index[str[i] || ''] = {});
-      }
-
-      const words = index[str[i] || ''] ||
-        (index[str[i] || ''] = []);
-
-      words.push(str);
+      this.push(`wordSet.add(${JSON.stringify(str)});\n`);
       cb();
     },
     function (cb) { // flush function
-      this.push('module.exports = ' + JSON.stringify(wordLookup));
+      this.push('module.exports = wordSet;\n');
       cb();
     }
   );
