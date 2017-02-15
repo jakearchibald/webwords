@@ -25,6 +25,11 @@
   align-items: center;
   justify-content: center;
   background: #ffe0a1;
+
+  &.selected {
+    color: #fff;
+    background: green;
+  }
 }
 
 .tile-place-button {

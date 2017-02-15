@@ -20,10 +20,7 @@ import BoundComponent from '../utils/bound-component';
 import TilePlaceButton from './tile-place-button';
 
 export default class Board extends BoundComponent {
-  constructor(props) {
-    super(props);
-  }
-  render({board}) {
+  render({board, enableTileButtons, onBoardSpaceClick}) {
     const boardVDomRows = [];
 
     for (let y = 0; y < board.height; y++) {
@@ -40,7 +37,10 @@ export default class Board extends BoundComponent {
               {action &&
                 <div class="action-tile">{action}</div>
               }
-              <TilePlaceButton/>
+              <TilePlaceButton
+                disabled={!enableTileButtons}
+                onClick={event => onBoardSpaceClick(event, x, y)}
+              />
             </div>
           </td>
         )

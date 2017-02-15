@@ -32,7 +32,7 @@ export default class App extends BoundComponent {
 
     throw Error('TODO: implement non-local games');
   }
-  render({game, server, localPlayerTiles}) {
+  render({game, server, tileRack, tileSelected, onBoardSpaceClick}) {
     const board = game ? game.createBoard() : new Board();
 
     return (
@@ -46,10 +46,13 @@ export default class App extends BoundComponent {
         </div>
         <Zoomer>
           {!server &&
-            <BoardComponent board={board}/>
+            <BoardComponent
+              enableTileButtons={tileSelected}
+              {...{board, onBoardSpaceClick}}
+            />
           }
         </Zoomer>
-        <PlayerLetters tiles={localPlayerTiles} />
+        <PlayerLetters tiles={tileRack} />
       </div>
     );
   }

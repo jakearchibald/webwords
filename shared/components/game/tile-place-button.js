@@ -19,9 +19,14 @@ import { h } from 'preact';
 import BoundComponent from '../utils/bound-component';
 
 export default class TilePlaceButton extends BoundComponent {
-  render({ disabled }) {
+  render({ disabled, onClick }) {
     return (
-      <button class="invisible-button tile-place-button" disabled={disabled}>Place tile</button>
+      <button
+        class="invisible-button tile-place-button"
+        {...{disabled, onClick}}
+        disabled={disabled}>
+        Place tile
+      </button>
     );
   }
 }

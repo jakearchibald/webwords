@@ -32,34 +32,61 @@ export default class Root extends BoundComponent {
       throw Error('not implemented yet');
     }
 
-    this.state.move = undefined;
-    this.state.localPlayerTiles = new Array(7).fill(undefined);
+    this.state.tileSelected = false;
+    // Not-yet-played tiles on the board
+    this.state.boardPlacements = {};
+    // The "local player" is the one who's operating the device.
+    // This is always the current player in a local game.
+    this.state.tileRack = new Array(7).fill(undefined);
 
     const localPlayerLetters = this.state.game.players[this.state.localPlayerIndex].letters;
 
     [...localPlayerLetters].forEach((letter, i) => {
-      this.state.localPlayerTiles[i] = {
+      const tile = {
         tile: new Tile(letter, letter = ' '),
         selected: false,
-        onClick: this.onTileClick
+        onClick: event => this.onTileClick(event, tile)
       };
+
+      this.state.tileRack[i] = tile;
     });
 
     if (props.stateStale) this.updateStateFromNetwork();
   }
-  onTileClick(event, ...args) {
-    //debugger;
-    console.log(event);
-    console.log('click');
+  onTileClick(event, tile) {
+    // Deselected selected tile
+    if (tile.selected) {
+      tile.selected = false;
+
+      this.setState({
+        tileRack: this.state.tileRack,
+        tileSelected: false
+      });
+      return;
+    }
+
+    // Deselect other tiles & select this one
+    // TODO: deselect move tiles too
+    for (const tile of this.state.tileRack) {
+      tile.selected = false;
+    }
+    tile.selected = true;
+
+    this.setState({
+      tileRack: this.state.tileRack,
+      tileSelected: true
+    });
+  }
+  onBoardSpaceClick(event, x, y) {
+    console.log(x, y);
   }
   async updateStateFromNetwork() {
     throw Error('not implemented yet');
   }
-  render(props, {game, user, localPlayerTiles}) {
+  render(props, {game, user, tileRack, tileSelected}) {
     return <Game
-      game={game}
-      user={user}
-      localPlayerTiles={localPlayerTiles}
+      {...{game, user, tileRack, tileSelected}}
+      onBoardSpaceClick={this.onBoardSpaceClick}
     />
   }
 }
