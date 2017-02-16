@@ -18,9 +18,10 @@ import {h} from 'preact';
 
 import BoundComponent from '../utils/bound-component';
 import TilePlaceButton from './tile-place-button';
+import InteractiveTile from './interactive-tile';
 
 export default class Board extends BoundComponent {
-  render({board, enableTileButtons, onBoardSpaceClick}) {
+  render({board, enableTileButtons, onBoardSpaceClick, unplayedPlacements}) {
     const boardVDomRows = [];
 
     for (let y = 0; y < board.height; y++) {
@@ -29,7 +30,7 @@ export default class Board extends BoundComponent {
 
       for (let x = 0; x < board.width; x++) {
         const action = board.getActionTile(x, y);
-        //TODO: const tile = board.getTile(x, y);
+        const interactiveTile = unplayedPlacements[`${x}:${y}`];
 
         row.push(
           <td>
@@ -41,6 +42,9 @@ export default class Board extends BoundComponent {
                 disabled={!enableTileButtons}
                 onClick={event => onBoardSpaceClick(event, x, y)}
               />
+              {interactiveTile &&
+                <InteractiveTile {...interactiveTile}/>
+              }
             </div>
           </td>
         )

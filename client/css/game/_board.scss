@@ -18,16 +18,11 @@
   table-layout: fixed;
 
   td {
-    min-width: 35px;
-    height: 35px;
+    min-width: 45px;
+    height: 45px;
     text-align: center;
     border: 1px solid #ccc;
     color: #ccc;
-
-    &.placement {
-      color: #000;
-      background: #fbeacf;
-    }
   }
 
   .cell-inner {
@@ -39,15 +34,14 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    width: 100%;
     height: 100%;
+    position: absolute;
   }
-}
 
-.tile {
-  width: 35px;
-  height: 35px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #ffe0a1;
+  .tile {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+  }
 }

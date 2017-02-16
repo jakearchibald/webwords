@@ -34,7 +34,7 @@ export default class Root extends BoundComponent {
 
     this.state.tileSelected = false;
     // Not-yet-played tiles on the board
-    this.state.boardPlacements = {};
+    this.state.unplayedPlacements = {};
     // The "local player" is the one who's operating the device.
     // This is always the current player in a local game.
     this.state.tileRack = new Array(7).fill(undefined);
@@ -66,10 +66,16 @@ export default class Root extends BoundComponent {
     }
 
     // Deselect other tiles & select this one
-    // TODO: deselect move tiles too
-    for (const tile of this.state.tileRack) {
-      tile.selected = false;
+    // Tiles on the board:
+    for (const index of Object.keys(this.state.unplayedPlacements)) {
+      this.state.unplayedPlacements[index].selected = false;
     }
+    // Tiles in the rack:
+    for (const otherTile of this.state.tileRack) if (otherTile) {
+      otherTile.selected = false;
+    }
+
+    // Activate this tile
     tile.selected = true;
 
     this.setState({
@@ -77,16 +83,60 @@ export default class Root extends BoundComponent {
       tileSelected: true
     });
   }
+  // Gets the currently selected tile from either the rack or the board,
+  // removes it, and returns it.
+  getAndRemoveSelectedTile() {
+    let tile;
+    // Find selected tile in the rack
+    const selectedRackIndex = this.state.tileRack.findIndex(tile => tile && tile.selected);
+
+    if (selectedRackIndex != -1) {
+      tile = this.state.tileRack[selectedRackIndex];
+      // Remove it
+      this.state.tileRack[selectedRackIndex] = undefined;
+    }
+    else {
+      // Look for the selected tile on the board
+      let unplayedKey;
+      [unplayedKey, tile] = Object.entries(this.state.unplayedPlacements).find(([key, tile]) => tile.selected);
+      // Remove it
+      delete this.state.unplayedPlacements[unplayedKey];
+    }
+
+    return tile;
+  }
   onBoardSpaceClick(event, x, y) {
-    console.log(x, y);
+    const tile = this.getAndRemoveSelectedTile();
+
+    tile.selected = false;
+    this.state.unplayedPlacements[`${x}:${y}`] = tile;
+
+    this.setState({
+      tileRack: this.state.tileRack,
+      tileSelected: false,
+      unplayedPlacements: this.state.unplayedPlacements
+    });
+  }
+  onRackSpaceClick(event, x) {
+    const tile = this.getAndRemoveSelectedTile();
+
+    tile.selected = false;
+    this.state.tileRack[x] = tile;
+
+    this.setState({
+      tileRack: this.state.tileRack,
+      tileSelected: false,
+      unplayedPlacements: this.state.unplayedPlacements
+    });
   }
   async updateStateFromNetwork() {
     throw Error('not implemented yet');
   }
-  render(props, {game, user, tileRack, tileSelected}) {
+  render(props, { game, user, tileRack, tileSelected, unplayedPlacements }) {
     return <Game
-      {...{game, user, tileRack, tileSelected}}
+      {...{ game, user, tileRack, tileSelected, unplayedPlacements }}
       onBoardSpaceClick={this.onBoardSpaceClick}
+      onRackSpaceClick={this.onRackSpaceClick}
     />
   }
 }

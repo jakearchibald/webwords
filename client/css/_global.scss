@@ -31,3 +31,7 @@ body {
   height: 100%;
   -webkit-text-size-adjust: 100%;
 }
+
+button:not([disabled]) {
+  cursor: pointer;
+}

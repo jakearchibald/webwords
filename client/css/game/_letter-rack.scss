@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-.player-letters {
+.letter-rack {
   display: flex;
   list-style: none;
   margin: 0;
@@ -22,7 +22,10 @@
   justify-content: center;
 
   li {
+    position: relative;
     display: block;
-    margin: 0 5px;
+    margin: 0 1px;
+    width: 45px;
+    height: 45px;
   }
 }

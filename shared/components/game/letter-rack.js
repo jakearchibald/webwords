@@ -20,23 +20,23 @@ import InteractiveTile from './interactive-tile';
 import TilePlaceButton from './tile-place-button';
 import BoundComponent from '../utils/bound-component';
 
-export default class PlayerLetters extends BoundComponent {
+export default class LetterRack extends BoundComponent {
   constructor(props) {
     super(props);
   }
-  render({tiles}) {
+  render({tiles, tileSelected, onRackSpaceClick}) {
     if (!tiles) return <div>TODO</div>;
 
     return (
-      <ul class="player-letters">
-        {tiles.map(tile =>
+      <ul class="letter-rack">
+        {tiles.map((tile, i) =>
           <li>
             {tile ?
               <InteractiveTile
                 {...tile}
               />
               :
-              <TilePlaceButton/>
+              <TilePlaceButton disabled={!tileSelected} onClick={event => onRackSpaceClick(event, i)}/>
             }
           </li>
         )}

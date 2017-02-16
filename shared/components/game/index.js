@@ -20,7 +20,7 @@ import BoundComponent from '../utils/bound-component';
 import Players from './players';
 import BoardComponent from './board';
 import Zoomer from './zoomer';
-import PlayerLetters from './player-letters';
+import LetterRack from './letter-rack';
 import Board from '../../game/board';
 
 export default class App extends BoundComponent {
@@ -32,7 +32,10 @@ export default class App extends BoundComponent {
 
     throw Error('TODO: implement non-local games');
   }
-  render({game, server, tileRack, tileSelected, onBoardSpaceClick}) {
+  render({
+    game, server, tileRack, tileSelected, unplayedPlacements, onBoardSpaceClick,
+    onRackSpaceClick
+  }) {
     const board = game ? game.createBoard() : new Board();
 
     return (
@@ -48,11 +51,11 @@ export default class App extends BoundComponent {
           {!server &&
             <BoardComponent
               enableTileButtons={tileSelected}
-              {...{board, onBoardSpaceClick}}
+              {...{ board, unplayedPlacements, onBoardSpaceClick }}
             />
           }
         </Zoomer>
-        <PlayerLetters tiles={tileRack} />
+        <LetterRack tiles={tileRack} {...{tileSelected, onRackSpaceClick}} />
       </div>
     );
   }
