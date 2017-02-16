@@ -20,9 +20,21 @@ import BoundComponent from '../../../shared/components/utils/bound-component';
 import Game from '../../../shared/components/game';
 import Tile from '../../../shared/game/tile';
 
+import {transition} from '../js-common/utils';
+import {easeOutQuint} from '../js-common/css-easings'
+
+const proxyEl = document.querySelector('.proxy-el-container');
+
 export default class Root extends BoundComponent {
   constructor(props) {
     super(props);
+
+    // Transitions to complete on next render
+    // For tile transitions:
+    // {from: {location: 'rack', x: 1}, to: {location: 'board', x: 0, y: 0}}
+    this.pendingTileTransitions = [];
+
+    // Set up state
     this.state = props.initialState;
 
     if (this.state.game.local) {
@@ -84,9 +96,10 @@ export default class Root extends BoundComponent {
     });
   }
   // Gets the currently selected tile from either the rack or the board,
-  // removes it, and returns it.
+  // removes it, and returns it, & where it came from
   getAndRemoveSelectedTile() {
     let tile;
+    let from;
     // Find selected tile in the rack
     const selectedRackIndex = this.state.tileRack.findIndex(tile => tile && tile.selected);
 
@@ -94,6 +107,7 @@ export default class Root extends BoundComponent {
       tile = this.state.tileRack[selectedRackIndex];
       // Remove it
       this.state.tileRack[selectedRackIndex] = undefined;
+      from = {location: 'rack', x: selectedRackIndex};
     }
     else {
       // Look for the selected tile on the board
@@ -101,15 +115,22 @@ export default class Root extends BoundComponent {
       [unplayedKey, tile] = Object.entries(this.state.unplayedPlacements).find(([key, tile]) => tile.selected);
       // Remove it
       delete this.state.unplayedPlacements[unplayedKey];
+      const [x, y] = unplayedKey.split(':').map(n => Number(n));
+      from = { location: 'board', x, y };
     }
 
-    return tile;
+    return [tile, from];
   }
   onBoardSpaceClick(event, x, y) {
-    const tile = this.getAndRemoveSelectedTile();
+    const [tile, from] = this.getAndRemoveSelectedTile();
 
     tile.selected = false;
     this.state.unplayedPlacements[`${x}:${y}`] = tile;
+
+    this.pendingTileTransitions.push({from, to: {
+      location: 'board',
+      x, y
+    }});
 
     this.setState({
       tileRack: this.state.tileRack,
@@ -118,10 +139,15 @@ export default class Root extends BoundComponent {
     });
   }
   onRackSpaceClick(event, x) {
-    const tile = this.getAndRemoveSelectedTile();
+    const [tile, from] = this.getAndRemoveSelectedTile();
 
     tile.selected = false;
     this.state.tileRack[x] = tile;
+
+    this.pendingTileTransitions.push({from, to: {
+      location: 'rack',
+      x
+    }});
 
     this.setState({
       tileRack: this.state.tileRack,
@@ -131,6 +157,59 @@ export default class Root extends BoundComponent {
   }
   async updateStateFromNetwork() {
     throw Error('not implemented yet');
+  }
+  getTileContainerEl(location, x, y) {
+    if (location == 'rack') {
+      return document.querySelector('.letter-rack').children[x];
+    }
+    return document.querySelectorAll('.board > tr')[y].children[x].querySelector('.cell-inner');
+  }
+  performTileTransitions() {
+    // This whole thing is a little off piste in terms of preact,
+    // but it's fast & simple.
+    const scrollTop = document.documentElement.scrollTop;
+    const scrollLeft = document.documentElement.scrollLeft;
+
+    for (const {from, to} of this.pendingTileTransitions) {
+      // Gather position data
+      const startEl = this.getTileContainerEl(from.location, from.x, from.y);
+      const endEl = this.getTileContainerEl(to.location, to.x, to.y);
+      const startRect = startEl.getBoundingClientRect();
+      const endRect = endEl.getBoundingClientRect();
+      const tile = endEl.querySelector('.tile');
+      const tileClone = tile.cloneNode(true);
+
+      // Microtask for setting
+      Promise.resolve().then(async () => {
+        tile.style.opacity = '0';
+        proxyEl.appendChild(tileClone);
+        const tileRect = tileClone.getBoundingClientRect();
+        const startScale = startRect.width / tileRect.width;
+        const endScale = endRect.width / tileRect.width;
+
+        // Start
+        tileClone.style.transform = `translate(${startRect.left + scrollLeft}px, ${startRect.top + scrollTop}px) scale(${startScale})`;
+        // Force layout :(
+        tileClone.offsetWidth;
+
+        // Transition to end
+        await transition(tileClone, {
+          transform: `translate(${endRect.left + scrollLeft}px, ${endRect.top + scrollTop}px) scale(${endScale})`,
+          duration: 500,
+          easing: easeOutQuint
+        });
+
+        // Tidy up
+        proxyEl.removeChild(tileClone);
+        tile.style.opacity = '';
+      });
+    }
+
+    // Done! Empty the list
+    this.pendingTileTransitions = [];
+  }
+  componentDidUpdate() {
+    if (this.pendingTileTransitions[0]) this.performTileTransitions();
   }
   render(props, { game, user, tileRack, tileSelected, unplayedPlacements }) {
     return <Game

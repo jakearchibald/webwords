@@ -39,3 +39,17 @@ html, body {
   transform-origin: 0 0;
   position: absolute;
 }
+
+.proxy-el-container {
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+
+  .tile {
+    position: absolute;
+    top: 0;
+    left: 0;
+    transform-origin: 0 0;
+  }
+}

@@ -34,3 +34,25 @@ export function loadStyle(url) {
     document.head.appendChild(link);
   });
 }
+
+export function transition(el, {
+  duration = 1000,
+  easing = 'ease',
+  ...styles
+}) {
+  return new Promise(resolve => {
+    Object.assign(el.style, styles);
+    el.style.transition = `all ${duration}ms ${easing}`;
+    el.style.transitionProperty = Object.keys(styles).map(key => key.replace(/-\w/g, match => match[1].toUpperCase)).join();
+
+    function onTransitionComplete(event) {
+      if (event.target != el) return;
+      el.removeEventListener('transitionend', onTransitionComplete);
+      el.removeEventListener('transitioncancel', onTransitionComplete);
+      resolve();
+    }
+
+    el.addEventListener('transitionend', onTransitionComplete);
+    el.addEventListener('transitioncancel', onTransitionComplete);
+  });
+}

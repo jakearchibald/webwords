@@ -220,7 +220,7 @@ function createScriptTask(src, dest) {
         }),
         rollupBabel({
           presets: presets,
-          plugins: [["transform-react-jsx", {pragma:"h"}], "external-helpers"]
+          plugins: [["transform-react-jsx", {pragma:"h"}], "external-helpers", "transform-object-rest-spread"]
         })
       ]
     }).on('bundle', function(bundle) {
@@ -298,10 +298,7 @@ function watch() {
   // client
   gulp.watch(paths.scss.src, scss);
   gulp.watch(paths.copy.src, copy);
-
-  for (const item of browserScripts) {
-    gulp.watch(path.parse(item.src).dir + '/**/*.js', item.task);
-  }
+  gulp.watch('client/js/**/*.js', gulp.parallel(...browserScriptTasks));
 }
 
 gulp.task('serverTemplates', serverTemplates);
