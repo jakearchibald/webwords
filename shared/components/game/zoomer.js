@@ -99,7 +99,7 @@ export default class Zoomer extends BoundComponent {
     const y2 = event.touches[1].clientY - outerBounds.top;
 
     const avgX = (x1 + x2) / 2;
-    const avgY = (x1 + x2) / 2;
+    const avgY = (y1 + y2) / 2;
     const distance = getTouchDistance(event.touches[0], event.touches[1]);
     const distanceDiff = distance / this.startPinchDistance;
     // apply a minimum scale
