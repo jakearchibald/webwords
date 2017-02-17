@@ -24,7 +24,12 @@ import {
 
 const DRAG_THRESHOLD = 10;
 
-// TODO: normalise touch & mouse
+function getPos(event) {
+  if (event.touches) {
+    return [event.touches[0].clientX, event.touches[0].clientY];
+  }
+  return [event.clientX, event.clientY];
+}
 
 export default class InteractiveTile extends BoundComponent {
   constructor(...args) {
@@ -34,88 +39,64 @@ export default class InteractiveTile extends BoundComponent {
     this.pointerDown = false;
     this.wentPastThreshold = false;
   }
-  onTouchStart(event) {
+  onPointerDown(event) {
     // TODO: what happens if the first touch is outside this element?
     // And a second touch hits the tile?
     if (this.pointerDown) return;
     event.preventDefault();
 
+    const [x, y] = getPos(event);
+
     this.pointerDown = true;
     this.wentPastThreshold = false;
-    this.startX = event.touches[0].clientX;
-    this.startY = event.touches[0].clientY;
+    this.startX = x;
+    this.startY = y;
+
+    if (event.type.startsWith('mouse')) {
+      window.addEventListener('mouseup', this.onPointerUp);
+      window.addEventListener('mousemove', this.onPointerMove);
+    }
   }
-  onTouchMove() {
+  onPointerMove(event) {
     if (!this.pointerDown) return;
 
     if (this.wentPastThreshold) {
-      this.props.onDragMove(event.clientX, event.clientY);
+      this.props.onDragMove(...getPos(event));
       return;
     }
 
-    const dist = vec2Distance([this.startX, this.startY], [event.touches[0].clientX, event.touches[0].clientY]);
+    const pos = getPos(event);
+    const dist = vec2Distance([this.startX, this.startY], pos);
 
     if (dist > DRAG_THRESHOLD) {
-      this.props.onDragStart(event.touches[0].clientX, event.touches[0].clientY);
+      this.props.onDragStart(...pos);
       this.wentPastThreshold = true;
     }
   }
-  onTouchEnd() {
+  onPointerUp(event) {
     if (!this.pointerDown) return;
     // TODO what if two touches? 
 
-    if (this.wentPastThreshold) {
-      this.props.onDragEnd(event.touches[0].clientX, event.touches[0].clientY);
-    }
-    else {
-      this.props.onClick();
-    }
-  }
-  onMouseDown(event) {
-    // Bail if we're monitoring another pointer
-    if (this.pointerDown) return;
-    event.preventDefault();
-
-    this.pointerDown = true;
-    this.wentPastThreshold = false;
-    this.startX = event.clientX;
-    this.startY = event.clientY;
-    window.addEventListener('mouseup', this.onMouseUp);
-    window.addEventListener('mousemove', this.onMouseMove);
-  }
-  onMouseMove(event) {
-    if (this.wentPastThreshold) {
-      this.props.onDragMove(event.clientX, event.clientY);
-      return;
-    }
-
-    const dist = vec2Distance([this.startX, this.startY], [event.clientX, event.clientY]);
-
-    if (dist > DRAG_THRESHOLD) {
-      this.props.onDragStart(event.clientX, event.clientY);
-      this.wentPastThreshold = true;
-    }
-  }
-  onMouseUp(event) {
     this.pointerDown = false;
-    window.removeEventListener('mouseup', this.onMouseUp);
-    window.removeEventListener('mousemove', this.onMouseMove);
+    window.removeEventListener('mouseup', this.onPointerUp);
+    window.removeEventListener('mousemove', this.onPointerMove);
 
     if (this.wentPastThreshold) {
-      this.props.onDragEnd(event.clientX, event.clientY);
+      this.props.onDragEnd(...getPos(event));
     }
     else {
       this.props.onClick();
     }
   }
-  render({ tile, selected }) {
+  render({ tile, selected, onClick }) {
     return (
       <button
         class={`tile interactive-tile ${selected ? 'selected' : ''}`}
-        onTouchStart={this.onTouchStart}
-        onTouchMove={this.onTouchMove}
-        onTouchEnd={this.onTouchEnd}
-        onMouseDown={this.onMouseDown}
+        onTouchStart={this.onPointerDown}
+        onTouchMove={this.onPointerMove}
+        onTouchEnd={this.onPointerUp}
+        onMouseDown={this.onPointerDown}
+        onClick={onClick}
         >
         {tile.letter}
       </button>
