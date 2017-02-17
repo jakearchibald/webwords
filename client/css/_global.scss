@@ -35,3 +35,7 @@ body {
 button:not([disabled]) {
   cursor: pointer;
 }
+
+button[disabled] {
+  pointer-events: none;
+}

@@ -25,14 +25,13 @@ import {easeOutQuint} from '../js-common/css-easings'
 
 const proxyEl = document.querySelector('.proxy-el-container');
 
+function promiseRaf() {
+  return new Promise(r => requestAnimationFrame(r));
+}
+
 export default class Root extends BoundComponent {
   constructor(props) {
     super(props);
-
-    // Transitions to complete on next render
-    // For tile transitions:
-    // {from: {location: 'rack', x: 1}, to: {location: 'board', x: 0, y: 0}}
-    this.pendingTileTransitions = [];
 
     // Set up state
     this.state = props.initialState;
@@ -57,7 +56,10 @@ export default class Root extends BoundComponent {
       const tile = {
         tile: new Tile(letter, letter = ' '),
         selected: false,
-        onClick: event => this.onTileClick(event, tile)
+        onClick: () => this.onTileClick(tile),
+        onDragStart: (x, y) => this.onTileDragStart(tile, x, y),
+        onDragMove: (x, y) => this.onTileDragMove(x, y),
+        onDragEnd: (x, y) => this.onTileDragEnd(x, y)
       };
 
       this.state.tileRack[i] = tile;
@@ -65,7 +67,16 @@ export default class Root extends BoundComponent {
 
     if (props.stateStale) this.updateStateFromNetwork();
   }
-  onTileClick(event, tile) {
+  onTileDragStart() {
+    console.log('onTileDragStart');
+  }
+  onTileDragMove() {
+    console.log('onTileDragMove');
+  }
+  onTileDragEnd() {
+    console.log('onTileDragEnd');
+  }
+  onTileClick(tile) {
     // Deselected selected tile
     if (tile.selected) {
       tile.selected = false;
@@ -121,16 +132,16 @@ export default class Root extends BoundComponent {
 
     return [tile, from];
   }
-  onBoardSpaceClick(event, x, y) {
+  async onBoardSpaceClick(event, x, y) {
     const [tile, from] = this.getAndRemoveSelectedTile();
+
+    await this.proxyTransitionTile(from, {
+      location: 'board',
+      x, y
+    });
 
     tile.selected = false;
     this.state.unplayedPlacements[`${x}:${y}`] = tile;
-
-    this.pendingTileTransitions.push({from, to: {
-      location: 'board',
-      x, y
-    }});
 
     this.setState({
       tileRack: this.state.tileRack,
@@ -138,16 +149,16 @@ export default class Root extends BoundComponent {
       unplayedPlacements: this.state.unplayedPlacements
     });
   }
-  onRackSpaceClick(event, x) {
+  async onRackSpaceClick(event, x) {
     const [tile, from] = this.getAndRemoveSelectedTile();
+
+    await this.proxyTransitionTile(from, {
+      location: 'rack',
+      x
+    });
 
     tile.selected = false;
     this.state.tileRack[x] = tile;
-
-    this.pendingTileTransitions.push({from, to: {
-      location: 'rack',
-      x
-    }});
 
     this.setState({
       tileRack: this.state.tileRack,
@@ -158,58 +169,51 @@ export default class Root extends BoundComponent {
   async updateStateFromNetwork() {
     throw Error('not implemented yet');
   }
-  getTileContainerEl(location, x, y) {
-    if (location == 'rack') {
-      return document.querySelector('.letter-rack').children[x];
-    }
-    return document.querySelectorAll('.board > tr')[y].children[x].querySelector('.cell-inner');
-  }
-  performTileTransitions() {
+  async proxyTransitionTile(from, to) {
     // This whole thing is a little off piste in terms of preact,
     // but it's fast & simple.
     const scrollTop = document.documentElement.scrollTop;
     const scrollLeft = document.documentElement.scrollLeft;
 
-    for (const {from, to} of this.pendingTileTransitions) {
-      // Gather position data
-      const startEl = this.getTileContainerEl(from.location, from.x, from.y);
-      const endEl = this.getTileContainerEl(to.location, to.x, to.y);
-      const startRect = startEl.getBoundingClientRect();
-      const endRect = endEl.getBoundingClientRect();
-      const tile = endEl.querySelector('.tile');
-      const tileClone = tile.cloneNode(true);
+    // Gather position data
+    const startEl = this.getTileContainerEl(from.location, from.x, from.y);
+    const endEl = this.getTileContainerEl(to.location, to.x, to.y);
+    const startRect = startEl.getBoundingClientRect();
+    const endRect = endEl.getBoundingClientRect();
+    const tile = startEl.querySelector('.tile');
+    const tileClone = tile.cloneNode(true);
 
-      // Microtask for setting
-      Promise.resolve().then(async () => {
-        tile.style.opacity = '0';
-        proxyEl.appendChild(tileClone);
-        const tileRect = tileClone.getBoundingClientRect();
-        const startScale = startRect.width / tileRect.width;
-        const endScale = endRect.width / tileRect.width;
+    tileClone.classList.remove('selected');
 
-        // Start
-        tileClone.style.transform = `translate(${startRect.left + scrollLeft}px, ${startRect.top + scrollTop}px) scale(${startScale})`;
-        // Force layout :(
-        tileClone.offsetWidth;
+    tile.style.opacity = '0';
+    proxyEl.appendChild(tileClone);
 
-        // Transition to end
-        await transition(tileClone, {
-          transform: `translate(${endRect.left + scrollLeft}px, ${endRect.top + scrollTop}px) scale(${endScale})`,
-          duration: 500,
-          easing: easeOutQuint
-        });
+    const tileRect = tileClone.getBoundingClientRect();
+    const startScale = startRect.width / tileRect.width;
+    const endScale = endRect.width / tileRect.width;
 
-        // Tidy up
-        proxyEl.removeChild(tileClone);
-        tile.style.opacity = '';
-      });
-    }
+    // Start
+    tileClone.style.transform = `translate(${startRect.left + scrollLeft}px, ${startRect.top + scrollTop}px) scale(${startScale})`;
+    
+    // Wait a frame to allow the transition
+    await promiseRaf();
 
-    // Done! Empty the list
-    this.pendingTileTransitions = [];
+    // Transition to end
+    await transition(tileClone, {
+      transform: `translate(${endRect.left + scrollLeft}px, ${endRect.top + scrollTop}px) scale(${endScale})`,
+      duration: 500,
+      easing: easeOutQuint
+    });
+
+    // Tidy up
+    proxyEl.removeChild(tileClone);
+    tile.style.opacity = '';
   }
-  componentDidUpdate() {
-    if (this.pendingTileTransitions[0]) this.performTileTransitions();
+  getTileContainerEl(location, x, y) {
+    if (location == 'rack') {
+      return document.querySelector('.letter-rack').children[x];
+    }
+    return document.querySelectorAll('.board > tr')[y].children[x].querySelector('.cell-inner');
   }
   render(props, { game, user, tileRack, tileSelected, unplayedPlacements }) {
     return <Game

@@ -23,8 +23,7 @@ export default class TilePlaceButton extends BoundComponent {
     return (
       <button
         class="invisible-button tile-place-button"
-        {...{disabled, onClick}}
-        disabled={disabled}>
+        {...{disabled, onClick}}>
         Place tile
       </button>
     );

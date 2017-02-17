@@ -25,17 +25,11 @@ import {
 import {
   fromValues as vec2FromValues,
   create as vec2Create,
-  transformMat2d as vec2TransformMat2d
+  transformMat2d as vec2TransformMat2d,
+  distance as vec2Distance
 } from '../utils/gl-matrix/vec2';
 
 import BoundComponent from '../utils/bound-component';
-
-function getTouchDistance(t1, t2) {
-  const xDist = t1.pageX - t2.pageX;
-  const yDist = t1.pageY - t2.pageY;
-
-  return Math.sqrt(xDist*xDist + yDist*yDist);
-}
 
 export default class Zoomer extends BoundComponent {
   constructor(props) {
@@ -74,7 +68,7 @@ export default class Zoomer extends BoundComponent {
     this.activeTouchIds = [...event.touches].map(t => t.identifier);
     this.startPinchX = (x1 + x2) / 2;
     this.startPinchY = (y1 + y2) / 2;
-    this.startPinchDistance = getTouchDistance(event.touches[0], event.touches[1]);
+    this.startPinchDistance = vec2Distance([event.touches[0].clientX, event.touches[0].clientY], [event.touches[1].clientX, event.touches[1].clientY]);
     
     // Remove regular scrolling
     this.innerTranslateX -= this.outerEl.scrollLeft;
@@ -100,7 +94,7 @@ export default class Zoomer extends BoundComponent {
 
     const avgX = (x1 + x2) / 2;
     const avgY = (y1 + y2) / 2;
-    const distance = getTouchDistance(event.touches[0], event.touches[1]);
+    const distance = vec2Distance([event.touches[0].clientX, event.touches[0].clientY], [event.touches[1].clientX, event.touches[1].clientY]);
     const distanceDiff = distance / this.startPinchDistance;
     // apply a minimum scale
     const scaleAmount = Math.max(distanceDiff, this.innerMinScale / this.innerScale);
