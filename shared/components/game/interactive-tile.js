@@ -25,10 +25,23 @@ import {
 const DRAG_THRESHOLD = 10;
 
 function getPos(event) {
-  if (event.touches) {
-    return [event.touches[0].clientX, event.touches[0].clientY];
+  if (event.targetTouches) {
+    return [event.targetTouches[0].clientX, event.targetTouches[0].clientY];
   }
   return [event.clientX, event.clientY];
+}
+
+function isNonPrimaryButton(event) {
+  return event.type.startsWith('mouse') && event.button !== 0; 
+}
+
+function getId(event) {
+  return event.targetTouches ?
+    event.targetTouches[0].identifier : 0;
+}
+
+function idIsInTouchList(id, touchList) {
+  return [...touchList].some(touch => touch.identifier == id);
 }
 
 export default class InteractiveTile extends BoundComponent {
@@ -38,11 +51,12 @@ export default class InteractiveTile extends BoundComponent {
     this.startY = 0;
     this.pointerDown = false;
     this.wentPastThreshold = false;
+    this.touchId = 0;
   }
   onPointerDown(event) {
     // TODO: what happens if the first touch is outside this element?
     // And a second touch hits the tile?
-    if (this.pointerDown) return;
+    if (this.pointerDown || isNonPrimaryButton(event)) return;
     event.preventDefault();
 
     const [x, y] = getPos(event);
@@ -51,6 +65,7 @@ export default class InteractiveTile extends BoundComponent {
     this.wentPastThreshold = false;
     this.startX = x;
     this.startY = y;
+    this.touchId = getId(event);
 
     if (event.type.startsWith('mouse')) {
       window.addEventListener('mouseup', this.onPointerUp);
@@ -74,8 +89,12 @@ export default class InteractiveTile extends BoundComponent {
     }
   }
   onPointerUp(event) {
-    if (!this.pointerDown) return;
-    // TODO what if two touches? 
+    if (!this.pointerDown || isNonPrimaryButton(event)) return;
+
+    // Watch out for unrelated touch events
+    if (this.touchId && !idIsInTouchList(this.touchId, this.changedTouches)) return;
+    
+    event.preventDefault();
 
     this.pointerDown = false;
     window.removeEventListener('mouseup', this.onPointerUp);
@@ -88,7 +107,10 @@ export default class InteractiveTile extends BoundComponent {
       this.props.onClick();
     }
   }
-  render({ tile, selected, onClick }) {
+  onKeyUp(event) {
+    if (event.key == 'Enter') this.props.onClick();
+  }
+  render({ tile, selected }) {
     return (
       <button
         class={`tile interactive-tile ${selected ? 'selected' : ''}`}
@@ -96,7 +118,7 @@ export default class InteractiveTile extends BoundComponent {
         onTouchMove={this.onPointerMove}
         onTouchEnd={this.onPointerUp}
         onMouseDown={this.onPointerDown}
-        onClick={onClick}
+        onKeyUp={this.onKeyUp}
         >
         {tile.letter}
       </button>

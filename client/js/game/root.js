@@ -33,6 +33,13 @@ export default class Root extends BoundComponent {
   constructor(props) {
     super(props);
 
+    // Properties used during dragging
+    this.draggingTile = null;
+    this.dragProxyTile = null;
+
+    // Properties used during selecting
+    this.selectedTile = null;
+
     // Set up state
     this.state = props.initialState;
 
@@ -67,19 +74,83 @@ export default class Root extends BoundComponent {
 
     if (props.stateStale) this.updateStateFromNetwork();
   }
-  onTileDragStart() {
-    console.log('onTileDragStart');
+  onTileDragStart(tile, x, y) {
+    this.draggingTile = tile;
+    const from = this.tileToLocation(tile);
+
+    const tileEl = this.getTileContainerEl(from.location, from.x, from.y).querySelector('.tile');
+    const tileClone = tileEl.cloneNode(true);
+    const tileProxy = document.createElement('div');
+
+    tileEl.style.opacity = 0;
+    
+    tileProxy.classList.add('tile-wrapper');
+    tileProxy.appendChild(tileClone);
+    this.dragProxyTile = tileProxy;
+
+    tileClone.classList.remove('selected');
+
+    proxyEl.appendChild(tileProxy);
+
+    this.dragProxyTile.style.transform = `translate(${x}px, ${y}px)`;
   }
-  onTileDragMove() {
-    console.log('onTileDragMove');
+  onTileDragMove(x, y) {
+    this.dragProxyTile.style.transform = `translate(${x}px, ${y}px)`;
   }
-  onTileDragEnd() {
-    console.log('onTileDragEnd');
+  onTileDragEnd(x, y) {
+    // Safari doesn't support elementsFromPoint :(
+    proxyEl.style.display = 'none';
+    const dropEl = document.elementFromPoint(x, y);
+    proxyEl.style.display = '';
+
+    const dropContainer = dropEl.closest('.board .cell-inner, .letter-rack li');
+
+    if (!dropContainer) {
+      this.abortDrop();
+      return;
+    }
+
+    // TODO: also abort if dragged over an existing tile - try to use the model not elements for this
+    // TODO: try to repurpose abortDrop for the success animation
+    // TODO: the start drag animation
+  }
+  async abortDrop() {
+    const scrollTop = document.documentElement.scrollTop;
+    const scrollLeft = document.documentElement.scrollLeft;
+
+    const tile = this.draggingTile;
+    const to = this.tileToLocation(tile);
+    const endEl = this.getTileContainerEl(to.location, to.x, to.y);
+    const dragProxyTile = this.dragProxyTile;
+    const innerTileEl = dragProxyTile.querySelector('.tile');
+    const startRect = innerTileEl.getBoundingClientRect();
+    const endRect = endEl.getBoundingClientRect();
+    const startScale = 1.2;
+    const endScale = endRect.width / (startRect.width / startScale);
+
+    // reset the container's position, we're just going to transform
+    // the inner element.
+    dragProxyTile.style.transform = '';
+    innerTileEl.style.transform = `translate(${startRect.left}px, ${startRect.top}px) scale(${startScale})`;
+
+    // Wait a frame to allow the transition
+    await promiseRaf();
+
+    // Transition to end
+    await transition(innerTileEl, {
+      transform: `translate(${endRect.left + scrollLeft}px, ${endRect.top + scrollTop}px) scale(${endScale})`,
+      duration: 500,
+      easing: easeOutQuint
+    });
+
+    proxyEl.removeChild(dragProxyTile);
+    endEl.querySelector('.tile').style.opacity = '';
   }
   onTileClick(tile) {
     // Deselected selected tile
     if (tile.selected) {
       tile.selected = false;
+      this.selectedTile = null;
 
       this.setState({
         tileRack: this.state.tileRack,
@@ -100,34 +171,35 @@ export default class Root extends BoundComponent {
 
     // Activate this tile
     tile.selected = true;
+    this.selectedTile = tile;
 
     this.setState({
       tileRack: this.state.tileRack,
       tileSelected: true
     });
   }
+  tileToLocation(tile) {
+    const indexOf = this.state.tileRack.indexOf(tile);
+
+    if (indexOf !== -1) {
+      return {location: 'rack', x: indexOf}
+    }
+
+    const key = Object.entries(this.state.unplayedPlacements).find(([key, unplayedTile]) => unplayedTile == tile)[0];
+    const [x, y] = key.split(':').map(n => Number(n));
+    return { location: 'board', x, y };
+  }
   // Gets the currently selected tile from either the rack or the board,
   // removes it, and returns it, & where it came from
   getAndRemoveSelectedTile() {
-    let tile;
-    let from;
-    // Find selected tile in the rack
-    const selectedRackIndex = this.state.tileRack.findIndex(tile => tile && tile.selected);
+    const tile = this.selectedTile;
+    const from = this.tileToLocation(tile);
 
-    if (selectedRackIndex != -1) {
-      tile = this.state.tileRack[selectedRackIndex];
-      // Remove it
-      this.state.tileRack[selectedRackIndex] = undefined;
-      from = {location: 'rack', x: selectedRackIndex};
+    if (from.location == 'rack') {
+      this.state.tileRack[from.x] = undefined;
     }
     else {
-      // Look for the selected tile on the board
-      let unplayedKey;
-      [unplayedKey, tile] = Object.entries(this.state.unplayedPlacements).find(([key, tile]) => tile.selected);
-      // Remove it
-      delete this.state.unplayedPlacements[unplayedKey];
-      const [x, y] = unplayedKey.split(':').map(n => Number(n));
-      from = { location: 'board', x, y };
+      delete this.state.unplayedPlacements[`${from.x}:${from.y}`]
     }
 
     return [tile, from];
@@ -141,6 +213,7 @@ export default class Root extends BoundComponent {
     });
 
     tile.selected = false;
+    this.selectedTile = null;
     this.state.unplayedPlacements[`${x}:${y}`] = tile;
 
     this.setState({
@@ -158,6 +231,7 @@ export default class Root extends BoundComponent {
     });
 
     tile.selected = false;
+    this.selectedTile = null;
     this.state.tileRack[x] = tile;
 
     this.setState({
@@ -171,7 +245,7 @@ export default class Root extends BoundComponent {
   }
   async proxyTransitionTile(from, to) {
     // This whole thing is a little off piste in terms of preact,
-    // but it's fast & simple.
+    // but it's fast.
     const scrollTop = document.documentElement.scrollTop;
     const scrollLeft = document.documentElement.scrollLeft;
 

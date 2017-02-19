@@ -46,10 +46,17 @@ html, body {
   top: 0;
   left: 0;
 
-  .tile {
+  > .tile,
+  > .tile-wrapper {
     position: absolute;
     top: 0;
     left: 0;
+    transform-origin: 0 0;
+    will-change: transform;
+  }
+
+  > .tile-wrapper .tile {
+    transform: scale(1.2) translate(-50%, -50%);
     transform-origin: 0 0;
   }
 }
