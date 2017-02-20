@@ -110,6 +110,20 @@ export default class Root extends BoundComponent {
       return;
     }
 
+    const to = this.containerToLocation(dropContainer);
+
+    // Trying to drop on top of an existing tile?
+    // If so, abort
+    if (
+      (to.location == 'rack' && this.state.tileRack[to.x]) ||
+      this.state.unplayedPlacements[`${to.x}:${to.y}`]
+    ) {
+      this.abortDrop();
+      return;
+    }
+
+    
+
     // TODO: also abort if dragged over an existing tile - try to use the model not elements for this
     // TODO: try to repurpose abortDrop for the success animation
     // TODO: the start drag animation
@@ -177,6 +191,24 @@ export default class Root extends BoundComponent {
       tileRack: this.state.tileRack,
       tileSelected: true
     });
+  }
+  containerToLocation(tileContainer) {
+    if (tileContainer.closest('.letter-rack')) {
+      return {
+        location: 'rack',
+        x: [...tileContainer.parentNode.children].indexOf(tileContainer)
+      }
+    }
+    // Else it must be on the board
+    const td = tileContainer.closest('td');
+    const x = [...td.parentNode.children].indexOf(td);
+    const tr = td.parentNode;
+    const y = [...tr.parentNode.children].filter(el => el.tagName == 'TR').indexOf(tr);
+
+    return {
+      location: 'board',
+      x, y
+    };
   }
   tileToLocation(tile) {
     const indexOf = this.state.tileRack.indexOf(tile);
