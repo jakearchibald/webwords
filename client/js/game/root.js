@@ -97,16 +97,24 @@ export default class Root extends BoundComponent {
   onTileDragMove(x, y) {
     this.dragProxyTile.style.transform = `translate(${x}px, ${y}px)`;
   }
-  onTileDragEnd(x, y) {
+  async onTileDragEnd(x, y) {
+    const draggingTile = this.draggingTile;
+    const dragProxyTile = this.dragProxyTile;
+
+    this.draggingTile = undefined;
+    this.dragProxyTile = undefined;
+
     // Safari doesn't support elementsFromPoint :(
     proxyEl.style.display = 'none';
     const dropEl = document.elementFromPoint(x, y);
     proxyEl.style.display = '';
 
     const dropContainer = dropEl.closest('.board .cell-inner, .letter-rack li');
+    const from = this.tileToLocation(draggingTile);
+    const fromContainer = this.getTileContainerEl(from.location, from.x, from.y);
 
     if (!dropContainer) {
-      this.abortDrop();
+      this.animateDropEnd(dragProxyTile, fromContainer, fromContainer);
       return;
     }
 
@@ -118,24 +126,24 @@ export default class Root extends BoundComponent {
       (to.location == 'rack' && this.state.tileRack[to.x]) ||
       this.state.unplayedPlacements[`${to.x}:${to.y}`]
     ) {
-      this.abortDrop();
+      this.animateDropEnd(dragProxyTile, fromContainer, fromContainer);
       return;
     }
 
-    
+    const endContainer = this.getTileContainerEl(to.location, to.x, to.y);
+    await this.animateDropEnd(dragProxyTile, fromContainer, endContainer);
+    this.removeTile(from);
+    this.addTile(draggingTile, to);
 
-    // TODO: also abort if dragged over an existing tile - try to use the model not elements for this
-    // TODO: try to repurpose abortDrop for the success animation
-    // TODO: the start drag animation
+    this.setState({
+      tileRack: this.state.tileRack,
+      unplayedPlacements: this.state.unplayedPlacements
+    });
   }
-  async abortDrop() {
+  async animateDropEnd(dragProxyTile, startEl, endEl) {
     const scrollTop = document.documentElement.scrollTop;
     const scrollLeft = document.documentElement.scrollLeft;
 
-    const tile = this.draggingTile;
-    const to = this.tileToLocation(tile);
-    const endEl = this.getTileContainerEl(to.location, to.x, to.y);
-    const dragProxyTile = this.dragProxyTile;
     const innerTileEl = dragProxyTile.querySelector('.tile');
     const startRect = innerTileEl.getBoundingClientRect();
     const endRect = endEl.getBoundingClientRect();
@@ -158,7 +166,7 @@ export default class Root extends BoundComponent {
     });
 
     proxyEl.removeChild(dragProxyTile);
-    endEl.querySelector('.tile').style.opacity = '';
+    startEl.querySelector('.tile').style.opacity = '';
   }
   onTileClick(tile) {
     // Deselected selected tile
@@ -221,32 +229,37 @@ export default class Root extends BoundComponent {
     const [x, y] = key.split(':').map(n => Number(n));
     return { location: 'board', x, y };
   }
-  // Gets the currently selected tile from either the rack or the board,
-  // removes it, and returns it, & where it came from
-  getAndRemoveSelectedTile() {
-    const tile = this.selectedTile;
-    const from = this.tileToLocation(tile);
-
+  removeTile(from) {
     if (from.location == 'rack') {
       this.state.tileRack[from.x] = undefined;
     }
     else {
       delete this.state.unplayedPlacements[`${from.x}:${from.y}`]
     }
-
-    return [tile, from];
+  }
+  addTile(tile, to) {
+    if (to.location == 'rack') {
+      this.state.tileRack[to.x] = tile;
+    }
+    else {
+      this.state.unplayedPlacements[`${to.x}:${to.y}`] = tile;
+    }
   }
   async onBoardSpaceClick(event, x, y) {
-    const [tile, from] = this.getAndRemoveSelectedTile();
-
-    await this.proxyTransitionTile(from, {
+    const tile = this.selectedTile;
+    const from = this.tileToLocation(tile);
+    const to = {
       location: 'board',
       x, y
-    });
+    };
+
+    await this.proxyTransitionTile(from, to);
 
     tile.selected = false;
     this.selectedTile = null;
     this.state.unplayedPlacements[`${x}:${y}`] = tile;
+    this.removeTile(from);
+    this.addTile(tile, to);
 
     this.setState({
       tileRack: this.state.tileRack,
@@ -255,16 +268,19 @@ export default class Root extends BoundComponent {
     });
   }
   async onRackSpaceClick(event, x) {
-    const [tile, from] = this.getAndRemoveSelectedTile();
-
-    await this.proxyTransitionTile(from, {
+    const tile = this.selectedTile;
+    const from = this.tileToLocation(tile);
+    const to = {
       location: 'rack',
       x
-    });
+    };
+
+    await this.proxyTransitionTile(from, to);
 
     tile.selected = false;
     this.selectedTile = null;
-    this.state.tileRack[x] = tile;
+    this.removeTile(from);
+    this.addTile(tile, to);
 
     this.setState({
       tileRack: this.state.tileRack,
