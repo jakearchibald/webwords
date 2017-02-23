@@ -82,7 +82,7 @@ const paths = {
 };
 
 const serverProcess = respawn(['node', `${paths.serverScripts.dest}/index.js`]);
-const databaseProcess = respawn(['docker', 'start', '-a', 'bwq-mongo']);
+const databaseProcess = respawn(['docker', 'start', '-a', 'webwords-mongo']);
 
 // hook up the logging
 for (const process of [serverProcess, databaseProcess]) {
