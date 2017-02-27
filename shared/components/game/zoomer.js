@@ -80,8 +80,8 @@ export default class Zoomer extends BoundComponent {
 
     this.updateInnerPosition();
     
-    this.outerEl.addEventListener('touchmove', this.onTouchMove);
-    this.outerEl.addEventListener('touchend', this.onTouchEnd);
+    this.outerEl.addEventListener('touchmove', this.onTouchMove, {passive: false});
+    this.outerEl.addEventListener('touchend', this.onTouchEnd, {passive: false});
   }
   // I'm so sorry about the contents of this function.
   // I don't really know what I'm doing.

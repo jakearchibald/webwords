@@ -25,8 +25,11 @@ import {
 const DRAG_THRESHOLD = 10;
 
 function getPos(event) {
-  if (event.targetTouches) {
+  if (event.targetTouches && event.targetTouches[0]) {
     return [event.targetTouches[0].clientX, event.targetTouches[0].clientY];
+  }
+  if (event.changedTouches && event.changedTouches[0]) {
+    return [event.changedTouches[0].clientX, event.changedTouches[0].clientY];
   }
   return [event.clientX, event.clientY];
 }
