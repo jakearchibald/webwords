@@ -21,7 +21,10 @@ import TilePlaceButton from './tile-place-button';
 import InteractiveTile from './interactive-tile';
 
 export default class Board extends BoundComponent {
-  render({board, enableTileButtons, onBoardSpaceClick, unplayedPlacements}) {
+  render({
+    board, enableTileButtons, onBoardSpaceClick, unplayedPlacements,
+    score, scorePosition
+  }) {
     const boardVDomRows = [];
 
     for (let y = 0; y < board.height; y++) {
@@ -31,6 +34,7 @@ export default class Board extends BoundComponent {
       for (let x = 0; x < board.width; x++) {
         const action = board.getActionTile(x, y);
         const interactiveTile = unplayedPlacements[`${x}:${y}`];
+        const showScore = scorePosition && scorePosition.x == x && scorePosition.y == y;
 
         row.push(
           <td>
@@ -44,6 +48,9 @@ export default class Board extends BoundComponent {
               />
               {interactiveTile &&
                 <InteractiveTile {...interactiveTile}/>
+              }
+              {showScore &&
+                <div class="potential-score">{score}</div>
               }
             </div>
           </td>

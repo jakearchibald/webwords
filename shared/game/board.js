@@ -103,8 +103,10 @@ export default class Board {
    * @returns {Boolean}
    */
   placementsValid(move) {
-    // Must have placed a tile
-    if (move.placements.length == 0) return false;
+    // Do we have enough placements?
+    // The first move requires two tiles to be valid
+    const minPlacements = this._hasTiles ? 1 : 2;
+    if (move.placements.length < minPlacements) return false;
 
     // Sort the placements, starting with the left-topmost
     const sortedPlacements = move.placements.sort((a, b) => (a.x + a.y) - (b.x + b.y));
@@ -134,7 +136,7 @@ export default class Board {
           else return false;
         }
         else { // i > 1
-          // Ensure additional tiles are all horizonal or vertical
+          // Ensure additional tiles are all horizontal or vertical
           if (fixedAxis == 'x') {
             if (placement.x != previousX) return false;
           }

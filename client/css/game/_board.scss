@@ -45,4 +45,20 @@
     height: 100%;
     position: absolute;
   }
+
+  .potential-score {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    transform: translate(50%, 50%);
+    min-width: 24px;
+    height: 24px;
+    border-radius: 12px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    line-height: 1;
+    background: #008000;
+    color: #fff;
+  }
 }

@@ -274,7 +274,14 @@ describe('Board', function() {
       emptyBoard.placementsValid(move).should.be.false();
     });
 
-    it(`rejects moves that aren't ajacent to an existing tile`, function() {
+    it(`rejects first moves that only go through the centre`, function () {
+      const board = new Board();
+      let move = new Move();
+      move.add(new Tile('a'), 7, 7);
+      board.placementsValid(move).should.be.false();
+    });
+
+    it(`rejects moves that aren't adjacent to an existing tile`, function() {
       const board = createDemoBoard();
       let move = new Move();
       move.add(new Tile('a'), 0, 0);

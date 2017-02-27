@@ -22,6 +22,45 @@ import BoardComponent from './board';
 import Zoomer from './zoomer';
 import LetterRack from './letter-rack';
 import Board from '../../game/board';
+import Move from '../../game/move';
+
+/**
+ * Creates a state object based on the attempted move
+ * @param {Board} board
+ * @param {any} unplayedPlacements
+ */
+function analyseMove(board, unplayedPlacements) {
+  const move = new Move();
+  const ret = {
+    validPlacement: false,
+    score: false
+  };
+
+  for (const [key, tileSpec] of Object.entries(unplayedPlacements)) {
+    if (!tileSpec) continue;
+    const [x, y] = key.split(':').map(n => Number(n));
+    move.add(tileSpec.tile, x, y);
+  }
+
+  ret.validPlacement = board.placementsValid(move);
+
+  if (ret.validPlacement) {
+    // Get score
+    const words = board.getWordsForMove(move);
+    ret.score = board.getScoreForWords(words);
+
+    // Get position for "score" indicator
+    const longestWord = words.reduce((word1, word2) => {
+      return word1.placements.length > word2.placements.length ?
+        word1 : word2;
+    });
+
+    const {x, y} = longestWord.placements[longestWord.placements.length - 1];
+    ret.scorePosition = {x, y}; 
+  }
+
+  return ret;
+}
 
 export default class App extends BoundComponent {
   getThisPlayer() {
@@ -33,10 +72,12 @@ export default class App extends BoundComponent {
     throw Error('TODO: implement non-local games');
   }
   render({
-    game, server, tileRack, tileSelected, unplayedPlacements, onBoardSpaceClick,
-    onRackSpaceClick
+    game, server, tileRack, tileSelected,
+    unplayedPlacements = {},
+    onBoardSpaceClick, onRackSpaceClick
   }) {
     const board = game ? game.createBoard() : new Board();
+    const {validPlacement, score, scorePosition} = analyseMove(board, unplayedPlacements);
 
     return (
       <div class="game">
@@ -51,11 +92,19 @@ export default class App extends BoundComponent {
           {!server &&
             <BoardComponent
               enableTileButtons={tileSelected}
-              {...{ board, unplayedPlacements, onBoardSpaceClick }}
+              {...{
+                board, unplayedPlacements,
+                score, scorePosition,
+                onBoardSpaceClick
+              }}
             />
           }
         </Zoomer>
-        <LetterRack tiles={tileRack} {...{tileSelected, onRackSpaceClick}} />
+        <LetterRack 
+          tiles={tileRack}
+          enableTileButtons={tileSelected}
+          {...{onRackSpaceClick}}
+        />
       </div>
     );
   }

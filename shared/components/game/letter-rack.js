@@ -24,7 +24,7 @@ export default class LetterRack extends BoundComponent {
   constructor(props) {
     super(props);
   }
-  render({tiles, tileSelected, onRackSpaceClick}) {
+  render({tiles, enableTileButtons, onRackSpaceClick}) {
     if (!tiles) return <div>TODO</div>;
 
     return (
@@ -36,7 +36,7 @@ export default class LetterRack extends BoundComponent {
                 {...tile}
               />
               :
-              <TilePlaceButton disabled={!tileSelected} onClick={event => onRackSpaceClick(event, i)}/>
+              <TilePlaceButton disabled={!enableTileButtons} onClick={event => onRackSpaceClick(event, i)}/>
             }
           </li>
         )}
