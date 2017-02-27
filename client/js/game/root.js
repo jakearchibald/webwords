@@ -26,10 +26,6 @@ import {easeOutQuint} from '../js-common/css-easings'
 
 const proxyEl = document.querySelector('.proxy-el-container');
 
-function promiseRaf() {
-  return new Promise(r => requestAnimationFrame(r));
-}
-
 function removeTile(from, state) {
   if (from.location == 'rack') {
     return update(state, {
@@ -285,8 +281,8 @@ export default class Root extends BoundComponent {
     dragProxyTile.style.transform = '';
     innerTileEl.style.transform = `translate(${startRect.left}px, ${startRect.top}px) scale(${startScale})`;
 
-    // Wait a frame to allow the transition
-    await promiseRaf();
+    // Recalc to pick up the start values
+    window.getComputedStyle(innerTileEl).transform;
 
     // Transition to end
     await transition(innerTileEl, {
@@ -313,7 +309,6 @@ export default class Root extends BoundComponent {
     const tileClone = tile.cloneNode(true);
 
     tileClone.classList.remove('selected');
-
     tile.style.opacity = '0';
     proxyEl.appendChild(tileClone);
 
@@ -321,11 +316,12 @@ export default class Root extends BoundComponent {
     const startScale = startRect.width / tileRect.width;
     const endScale = endRect.width / tileRect.width;
 
+
     // Start
     tileClone.style.transform = `translate(${startRect.left + scrollLeft}px, ${startRect.top + scrollTop}px) scale(${startScale})`;
     
-    // Wait a frame to allow the transition
-    await promiseRaf();
+    // Recalc to pick up the start
+    window.getComputedStyle(tileClone).transform;
 
     // Transition to end
     await transition(tileClone, {
