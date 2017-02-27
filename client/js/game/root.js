@@ -163,7 +163,8 @@ export default class Root extends BoundComponent {
     const dropEl = document.elementFromPoint(x, y);
     proxyEl.style.display = '';
 
-    const dropContainer = dropEl.closest('.board .cell-inner, .letter-rack li');
+    // dropEl is null if released outside of the document
+    const dropContainer = dropEl && dropEl.closest('.board .cell-inner, .letter-rack li');
     const from = tileToLocation(draggingTile, this.state);
     const fromContainer = this.getTileContainerEl(from.location, from.x, from.y);
 
