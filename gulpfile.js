@@ -91,8 +91,6 @@ for (const process of [serverProcess, databaseProcess]) {
   process.on('warn', data => gutil.log(data.toString('utf-8')));
 }
 
-process.stdin.resume();
-
 // shut down gracefully
 onExit(() => {
   serverProcess.child && serverProcess.child.kill();
