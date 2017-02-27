@@ -23,4 +23,5 @@ export const routes = express.Router({
 });
 
 routes.get('/', home);
+router.get('/check', (req, res) => res.send('OK'));
 routes.get('/initial-state.json', initialState);
