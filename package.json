@@ -7,7 +7,10 @@
     "serve": "gulp serve",
     "test": "mocha build/test",
     "test-debug": "mocha --debug-brk --inspect build/test",
-    "postinstall": "NODE_ENV=production gulp build"
+    "heroku-postbuild": "NODE_ENV=production gulp build"
+  },
+  "engines": {
+    "node": ">=7.6.0"
   },
   "repository": "git@github.com:jakearchibald/webwords.git",
   "author": "Jake Archibald <jaffathecake@gmail.com>",
