@@ -20,7 +20,7 @@ import BoundComponent from '../utils/bound-component';
 
 import {
   distance as vec2Distance
-} from '../utils/gl-matrix/vec2';
+} from '../../utils/gl-matrix/vec2';
 
 const DRAG_THRESHOLD = 10;
 

@@ -21,13 +21,13 @@ import {
   translate as mat2dTranslate,
   scale as mat2dScale,
   invert as mat2dInvert
-} from '../utils/gl-matrix/mat2d';
+} from '../../utils/gl-matrix/mat2d';
 import {
   fromValues as vec2FromValues,
   create as vec2Create,
   transformMat2d as vec2TransformMat2d,
   distance as vec2Distance
-} from '../utils/gl-matrix/vec2';
+} from '../../utils/gl-matrix/vec2';
 
 import BoundComponent from '../utils/bound-component';
 

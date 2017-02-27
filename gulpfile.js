@@ -35,6 +35,7 @@ const buffer = require('vinyl-buffer');
 const rollup = require('rollup-stream');
 const rollupBabel = require('rollup-plugin-babel');
 const nodeResolve = require('rollup-plugin-node-resolve');
+const replace = require('rollup-plugin-replace');
 const commonjs = require('rollup-plugin-commonjs');
 const onExit = require('signal-exit')
 
@@ -219,6 +220,9 @@ function createScriptTask(src, dest) {
         rollupBabel({
           presets: presets,
           plugins: [["transform-react-jsx", {pragma:"h"}], "external-helpers", "transform-object-rest-spread"]
+        }),
+        replace({
+          'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV)
         })
       ]
     }).on('bundle', function(bundle) {

@@ -15,6 +15,7 @@
 * limitations under the License.
 */
 import {h} from 'preact';
+import update from 'immutability-helper';
 
 import BoundComponent from '../../../shared/components/utils/bound-component';
 import Game from '../../../shared/components/game';
@@ -29,6 +30,62 @@ function promiseRaf() {
   return new Promise(r => requestAnimationFrame(r));
 }
 
+function removeTile(from, state) {
+  if (from.location == 'rack') {
+    return update(state, {
+      tileRack: { [from.x]: { $set: undefined }}
+    });
+  }
+
+  return update(state, {
+    unplayedPlacements: { [`${from.x}:${from.y}`]: {$set: undefined} }
+  });
+}
+
+function addTile(tile, to, state) {
+  if (to.location == 'rack') {
+    return update(state, {
+      tileRack: {[to.x]: {$set: tile}}
+    });
+  }
+
+  return update(state, {
+    unplayedPlacements: { [`${to.x}:${to.y}`]: { $set: tile } }
+  });
+}
+
+function tileToLocation(tile, state) {
+  const indexOf = state.tileRack.findIndex(rackTile => rackTile && rackTile.key == tile.key);
+
+  if (indexOf !== -1) {
+    return { location: 'rack', x: indexOf }
+  }
+
+  const key = Object.entries(state.unplayedPlacements).find(([key, unplayedTile]) => unplayedTile && unplayedTile.key == tile.key)[0];
+  const [x, y] = key.split(':').map(n => Number(n));
+  return { location: 'board', x, y };
+}
+
+function locationToTile(from, state) {
+  if (from.location == 'rack') {
+    return state.tileRack[from.x];
+  }
+  return state.unplayedPlacements[`${from.x}:${from.y}`];
+}
+
+function updateTileAtLocation(to, spec, state) {
+  if (to.location == 'rack') {
+    return update(state, {
+      tileRack: { [to.x]: spec },
+      tileSelected: { $set: false }
+    });
+  }
+  return update(state, {
+    unplayedPlacements: { [`${to.x}:${to.y}`]: spec },
+    tileSelected: { $set: false }
+  });
+}
+
 export default class Root extends BoundComponent {
   constructor(props) {
     super(props);
@@ -36,9 +93,6 @@ export default class Root extends BoundComponent {
     // Properties used during dragging
     this.draggingTile = null;
     this.dragProxyTile = null;
-
-    // Properties used during selecting
-    this.selectedTile = null;
 
     // Set up state
     this.state = props.initialState;
@@ -60,23 +114,27 @@ export default class Root extends BoundComponent {
     const localPlayerLetters = this.state.game.players[this.state.localPlayerIndex].letters;
 
     [...localPlayerLetters].forEach((letter, i) => {
-      const tile = {
-        tile: new Tile(letter, letter = ' '),
-        selected: false,
-        onClick: () => this.onTileClick(tile),
-        onDragStart: (x, y) => this.onTileDragStart(tile, x, y),
-        onDragMove: (x, y) => this.onTileDragMove(x, y),
-        onDragEnd: (x, y) => this.onTileDragEnd(x, y)
-      };
-
-      this.state.tileRack[i] = tile;
+      this.state.tileRack[i] = this.createNewTileState(letter);
     });
 
     if (props.stateStale) this.updateStateFromNetwork();
   }
+  createNewTileState(letter) {
+    const tile = {
+      tile: new Tile(letter, letter == ' '),
+      selected: false,
+      key: Math.random(), // used in comparisons
+      onClick: () => this.onTileClick(tile),
+      onDragStart: (x, y) => this.onTileDragStart(tile, x, y),
+      onDragMove: (x, y) => this.onTileDragMove(x, y),
+      onDragEnd: (x, y) => this.onTileDragEnd(x, y)
+    };
+
+    return tile;
+  }
   onTileDragStart(tile, x, y) {
     this.draggingTile = tile;
-    const from = this.tileToLocation(tile);
+    const from = tileToLocation(tile, this.state);
 
     const tileEl = this.getTileContainerEl(from.location, from.x, from.y).querySelector('.tile');
     const tileClone = tileEl.cloneNode(true);
@@ -110,7 +168,7 @@ export default class Root extends BoundComponent {
     proxyEl.style.display = '';
 
     const dropContainer = dropEl.closest('.board .cell-inner, .letter-rack li');
-    const from = this.tileToLocation(draggingTile);
+    const from = tileToLocation(draggingTile, this.state);
     const fromContainer = this.getTileContainerEl(from.location, from.x, from.y);
 
     if (!dropContainer) {
@@ -132,13 +190,85 @@ export default class Root extends BoundComponent {
 
     const endContainer = this.getTileContainerEl(to.location, to.x, to.y);
     await this.animateDropEnd(dragProxyTile, fromContainer, endContainer);
-    this.removeTile(from);
-    this.addTile(draggingTile, to);
 
-    this.setState({
-      tileRack: this.state.tileRack,
-      unplayedPlacements: this.state.unplayedPlacements
+    let newState = this.state;
+
+    newState = removeTile(from, newState);
+    newState = addTile(draggingTile, to, newState);
+
+    this.setState(newState);
+  }
+  onTileClick(tile) {
+    // Deselected this tile
+    if (tile.selected) {
+      const location = tileToLocation(tile);
+      const newState = updateTileAtLocation(location, { selected: { $set: false } }, this.state);
+      newState.tileSelected = false;
+      this.setState(newState);
+      return;
+    }
+
+    let newState = this.state;
+    const selectedTileLocation = this.getSelectedTileLocation();
+    
+    // Deselect currently selected tile, if any
+    if (selectedTileLocation) {
+      newState = updateTileAtLocation(selectedTileLocation, { selected: { $set: false } }, newState);
+    }
+
+    // Select this tile
+    const tileLocation = tileToLocation(tile, this.state);
+    newState = updateTileAtLocation(tileLocation, { selected: { $set: true } }, newState);
+    newState.tileSelected = true;
+
+    this.setState(newState);
+  }
+  containerToLocation(tileContainer) {
+    if (tileContainer.closest('.letter-rack')) {
+      return {
+        location: 'rack',
+        x: [...tileContainer.parentNode.children].indexOf(tileContainer)
+      }
+    }
+    // Else it must be on the board
+    const td = tileContainer.closest('td');
+    const x = [...td.parentNode.children].indexOf(td);
+    const tr = td.parentNode;
+    const y = [...tr.parentNode.children].filter(el => el.tagName == 'TR').indexOf(tr);
+
+    return {
+      location: 'board',
+      x, y
+    };
+  }
+  async moveSelectedTile(to) {
+    const from = this.getSelectedTileLocation();
+    const tile = locationToTile(from, this.state);
+
+    await this.proxyTransitionTile(from, to);
+
+    let newState = this.state;
+    newState = removeTile(from, newState);
+    newState = addTile(update(tile, { selected: { $set: false } }), to, newState);
+
+    newState.tileSelected = false;
+
+    this.setState(newState);
+  }
+  onBoardSpaceClick(event, x, y) {
+    this.moveSelectedTile({
+      location: 'board',
+      x, y
     });
+  }
+  onRackSpaceClick(event, x) {
+    this.moveSelectedTile({
+      location: 'rack',
+      x
+    });
+  }
+  async updateStateFromNetwork() {
+    throw Error('not implemented yet');
   }
   async animateDropEnd(dragProxyTile, startEl, endEl) {
     const scrollTop = document.documentElement.scrollTop;
@@ -167,129 +297,6 @@ export default class Root extends BoundComponent {
 
     proxyEl.removeChild(dragProxyTile);
     startEl.querySelector('.tile').style.opacity = '';
-  }
-  onTileClick(tile) {
-    // Deselected selected tile
-    if (tile.selected) {
-      tile.selected = false;
-      this.selectedTile = null;
-
-      this.setState({
-        tileRack: this.state.tileRack,
-        tileSelected: false
-      });
-      return;
-    }
-
-    // Deselect other tiles & select this one
-    // Tiles on the board:
-    for (const index of Object.keys(this.state.unplayedPlacements)) {
-      this.state.unplayedPlacements[index].selected = false;
-    }
-    // Tiles in the rack:
-    for (const otherTile of this.state.tileRack) if (otherTile) {
-      otherTile.selected = false;
-    }
-
-    // Activate this tile
-    tile.selected = true;
-    this.selectedTile = tile;
-
-    this.setState({
-      tileRack: this.state.tileRack,
-      tileSelected: true
-    });
-  }
-  containerToLocation(tileContainer) {
-    if (tileContainer.closest('.letter-rack')) {
-      return {
-        location: 'rack',
-        x: [...tileContainer.parentNode.children].indexOf(tileContainer)
-      }
-    }
-    // Else it must be on the board
-    const td = tileContainer.closest('td');
-    const x = [...td.parentNode.children].indexOf(td);
-    const tr = td.parentNode;
-    const y = [...tr.parentNode.children].filter(el => el.tagName == 'TR').indexOf(tr);
-
-    return {
-      location: 'board',
-      x, y
-    };
-  }
-  tileToLocation(tile) {
-    const indexOf = this.state.tileRack.indexOf(tile);
-
-    if (indexOf !== -1) {
-      return {location: 'rack', x: indexOf}
-    }
-
-    const key = Object.entries(this.state.unplayedPlacements).find(([key, unplayedTile]) => unplayedTile == tile)[0];
-    const [x, y] = key.split(':').map(n => Number(n));
-    return { location: 'board', x, y };
-  }
-  removeTile(from) {
-    if (from.location == 'rack') {
-      this.state.tileRack[from.x] = undefined;
-    }
-    else {
-      delete this.state.unplayedPlacements[`${from.x}:${from.y}`]
-    }
-  }
-  addTile(tile, to) {
-    if (to.location == 'rack') {
-      this.state.tileRack[to.x] = tile;
-    }
-    else {
-      this.state.unplayedPlacements[`${to.x}:${to.y}`] = tile;
-    }
-  }
-  async onBoardSpaceClick(event, x, y) {
-    const tile = this.selectedTile;
-    const from = this.tileToLocation(tile);
-    const to = {
-      location: 'board',
-      x, y
-    };
-
-    await this.proxyTransitionTile(from, to);
-
-    tile.selected = false;
-    this.selectedTile = null;
-    this.state.unplayedPlacements[`${x}:${y}`] = tile;
-    this.removeTile(from);
-    this.addTile(tile, to);
-
-    this.setState({
-      tileRack: this.state.tileRack,
-      tileSelected: false,
-      unplayedPlacements: this.state.unplayedPlacements
-    });
-  }
-  async onRackSpaceClick(event, x) {
-    const tile = this.selectedTile;
-    const from = this.tileToLocation(tile);
-    const to = {
-      location: 'rack',
-      x
-    };
-
-    await this.proxyTransitionTile(from, to);
-
-    tile.selected = false;
-    this.selectedTile = null;
-    this.removeTile(from);
-    this.addTile(tile, to);
-
-    this.setState({
-      tileRack: this.state.tileRack,
-      tileSelected: false,
-      unplayedPlacements: this.state.unplayedPlacements
-    });
-  }
-  async updateStateFromNetwork() {
-    throw Error('not implemented yet');
   }
   async proxyTransitionTile(from, to) {
     // This whole thing is a little off piste in terms of preact,
@@ -336,6 +343,23 @@ export default class Root extends BoundComponent {
       return document.querySelector('.letter-rack').children[x];
     }
     return document.querySelectorAll('.board > tr')[y].children[x].querySelector('.cell-inner');
+  }
+  getSelectedTileLocation() {
+    for (const [x, tile] of this.state.tileRack.entries()) {
+      if (!tile) continue;
+      if (tile.selected) return {location: 'rack', x};
+    }
+
+    for (const key in this.state.unplayedPlacements) {
+      if (!this.state.unplayedPlacements[key]) continue;
+      if (this.state.unplayedPlacements[key].selected) {
+        const [x, y] = key.split(':').map(n => Number(n));
+
+        return {
+          location: 'board', x, y
+        };
+      }
+    }
   }
   render(props, { game, user, tileRack, tileSelected, unplayedPlacements }) {
     return <Game
