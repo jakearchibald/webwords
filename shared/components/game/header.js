@@ -14,10 +14,14 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-@import 'utils';
-@import 'global';
-@import 'game/layout';
-@import 'game/header';
-@import 'game/board';
-@import 'game/tile';
-@import 'game/letter-rack';
+import { h } from 'preact';
+
+import BoundComponent from '../utils/bound-component';
+
+export default class Header extends BoundComponent {
+  render() {
+    return (
+      <div class="page-header"></div>
+    );
+  }
+}

@@ -40,7 +40,7 @@ export default class Board extends BoundComponent {
           <td>
             <div class="cell-inner">
               {action &&
-                <div class="action-tile">{action}</div>
+                <div class={`action-tile action-${action}`}>{action.toUpperCase()}</div>
               }
               <TilePlaceButton
                 disabled={!enableTileButtons}
@@ -59,11 +59,13 @@ export default class Board extends BoundComponent {
     }
 
     return (
-      <table class="board">
-        {boardVDomRows.map(row =>
-          <tr>{row}</tr>
-        )}
-      </table>
+      <div class="board">
+        <table>
+          {boardVDomRows.map(row =>
+            <tr>{row}</tr>
+          )}
+        </table>
+      </div>
     );
   }
 }

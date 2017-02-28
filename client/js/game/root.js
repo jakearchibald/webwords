@@ -339,7 +339,7 @@ export default class Root extends BoundComponent {
     if (location == 'rack') {
       return document.querySelector('.letter-rack').children[x];
     }
-    return document.querySelectorAll('.board > tr')[y].children[x].querySelector('.cell-inner');
+    return document.querySelectorAll('.board tr')[y].children[x].querySelector('.cell-inner');
   }
   getSelectedTileLocation() {
     for (const [x, tile] of this.state.tileRack.entries()) {

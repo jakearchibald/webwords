@@ -15,29 +15,98 @@
  * limitations under the License.
  */
 .board {
-  table-layout: fixed;
+  padding: 0 16px;
+  font-size: 0.4rem;
+
+  table {
+    table-layout: fixed;
+    border-collapse: collapse;
+  }
 
   td {
-    min-width: 45px;
-    height: 45px;
-    text-align: center;
-    border: 1px solid #ccc;
-    color: #ccc;
     padding: 0;
+    margin: 0;
   }
 
   .cell-inner {
+    width: 18px;
+    height: 18px;
     position: relative;
-    height: 100%;
+    background: radial-gradient(circle 36px, rgba(#FEF5E0, .1232), rgba(#4d4d4d, .5467));
+    margin: 2px;
+    margin-bottom: 1px;
+    box-shadow: inset 0 2px 1px rgba(#000, .05);
+    overflow: hidden;
+    border-radius: 2px;
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      right: 0;
+      border-radius: 2px;
+      box-sizing: border-box;
+      border: 1px solid rgba(#979797, 0.14);
+    }
+  }
+
+  // remove margins for edge elements
+  table > tr {
+    &:first-child .cell-inner {
+      margin-top: 0;
+    }
+
+    &:last-child .cell-inner {
+      margin-bottom: 0;
+    }
+
+    & > td:first-child .cell-inner {
+      margin-left: 0;
+    }
+
+    & > td:last-child .cell-inner {
+      margin-right: 0;
+    }
   }
 
   .action-tile {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 100%;
-    height: 100%;
     position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    color: #212121;
+    // Small blur to work around Chrome bug.
+    // https://bugs.chromium.org/p/chromium/issues/detail?id=695626
+    // The bug is only in Canary right now, so probably safe to remove later.
+    text-shadow: 0.3px 0.3px 0.001px rgba(#fff, .29);
+    box-shadow: inset 0 2px 1px rgba(0,0,0,0.05), inset 0 0.5px 0 rgba(255,255,255,0.5);
+    border-radius: 2px;
+  }
+
+  .action-dl {
+    background: radial-gradient(circle 36px, rgba(#E9FEE0, .16), rgba(#014F6C, .77));
+    background-color: #1F9FCE;
+  }
+
+  .action-dw {
+    background: radial-gradient(circle 36px, rgba(#FEF7E6, .16), rgba(#C58F00, .77));
+    background-color: #E7B42D;
+  }
+
+  .action-tl {
+    background: radial-gradient(circle 36px, rgba(#E9FEE0, .16), rgba(#0A8302, .77));
+    background-color: #16C00A;
+  }
+
+  .action-tw {
+    background: radial-gradient(circle 36px, rgba(#FEF5E0, .16), rgba(#AB0000, .77));
+    background-color: #FC5252;
   }
 
   .tile {

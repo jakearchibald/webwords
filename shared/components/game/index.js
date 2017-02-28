@@ -21,6 +21,7 @@ import Players from './players';
 import BoardComponent from './board';
 import Zoomer from './zoomer';
 import LetterRack from './letter-rack';
+import Header from './header';
 import Board from '../../game/board';
 import Move from '../../game/move';
 
@@ -81,6 +82,7 @@ export default class App extends BoundComponent {
 
     return (
       <div class="game">
+        <Header/>
         <div class="action-row">
           {game ?
             <Players players={game.players} currentPlayer={game.currentPlayer} local={game.local} />
